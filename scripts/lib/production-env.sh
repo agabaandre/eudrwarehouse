@@ -85,6 +85,51 @@ production_persist_deploy_vars() {
   if [[ -n "${CLUSTER_WORKERS:-}" ]]; then
     production_env_set CLUSTER_WORKERS "${CLUSTER_WORKERS}"
   fi
+  if [[ -n "${API_HOST_PORT:-}" ]]; then
+    production_env_set API_HOST_PORT "${API_HOST_PORT}"
+  fi
+}
+
+# Pick a free localhost port for Docker → nginx (3000 is often used by Grafana)
+production_pick_api_host_port() {
+  local port saved="${API_HOST_PORT:-$(production_env_get API_HOST_PORT 2>/dev/null || true)}"
+
+  if [[ -n "$saved" ]] && ! production_port_in_use "$saved"; then
+    export API_HOST_PORT="$saved"
+    production_env_set API_HOST_PORT "$saved"
+    return 0
+  fi
+
+  port=""
+  for candidate in 3000 3001 3002 3010; do
+    if ! production_port_in_use "$candidate"; then
+      port="$candidate"
+      break
+    fi
+  done
+  port="${port:-3001}"
+
+  if [[ -n "$saved" && "$saved" != "$port" ]]; then
+    echo "Port ${saved} is already in use — switching API_HOST_PORT to ${port}"
+  elif [[ "$port" != "3000" ]]; then
+    echo "Port 3000 is already in use — using API_HOST_PORT=${port}"
+  fi
+
+  export API_HOST_PORT="$port"
+  production_env_set API_HOST_PORT "$port"
+}
+
+production_port_in_use() {
+  local port="$1"
+  if command -v ss >/dev/null 2>&1; then
+    ss -tln 2>/dev/null | grep -qE ":${port}[[:space:]]"
+    return $?
+  fi
+  if command -v netstat >/dev/null 2>&1; then
+    netstat -tln 2>/dev/null | grep -qE ":${port}[[:space:]]"
+    return $?
+  fi
+  return 1
 }
 
 production_require_bash() {

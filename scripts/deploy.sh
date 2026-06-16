@@ -36,9 +36,11 @@ export SUPERSET_URL="${SUPERSET_URL:-${PUBLIC_BASE_URL%/}/superset}"
 export ENABLE_WAREHOUSE="${ENABLE_WAREHOUSE:-$(production_env_get ENABLE_WAREHOUSE 2>/dev/null || echo false)}"
 
 production_ensure_jwt_secret
+production_pick_api_host_port
 production_persist_deploy_vars
 production_load_env
 export ENABLE_WAREHOUSE="${ENABLE_WAREHOUSE:-false}"
+export API_HOST_PORT="${API_HOST_PORT:-3000}"
 
 COMPOSE_FILES=(-f docker-compose.yml -f docker-compose.prod.yml)
 if [[ "${ENABLE_WAREHOUSE}" == "true" ]]; then
@@ -47,6 +49,7 @@ fi
 
 echo "Deploying to ${PUBLIC_BASE_URL}..."
 echo "  Warehouse stack: ${ENABLE_WAREHOUSE}"
+echo "  API host port:   ${API_HOST_PORT} (nginx must proxy to 127.0.0.1:${API_HOST_PORT})"
 
 # Do not fail deploy if a prior sudo run left root-owned scripts
 if command -v npm >/dev/null 2>&1 && [[ -f scripts/build-frontend.sh ]]; then
@@ -70,15 +73,15 @@ docker compose "${COMPOSE_FILES[@]}" up -d --build --remove-orphans
 echo ""
 echo "Waiting for API health..."
 for i in $(seq 1 30); do
-  if curl -sf "http://127.0.0.1:3000/api/health" 2>/dev/null | grep -q '"status":"ok"'; then
-    echo "API is healthy on http://127.0.0.1:3000"
+  if curl -sf "http://127.0.0.1:${API_HOST_PORT}/api/health" 2>/dev/null | grep -q '"status":"ok"'; then
+    echo "API is healthy on http://127.0.0.1:${API_HOST_PORT}"
     break
   fi
   if [[ "$i" -eq 30 ]]; then
     echo ""
-    echo "ERROR: API is not responding on port 3000 (nginx will show 502)."
+    echo "ERROR: API is not responding on port ${API_HOST_PORT} (nginx will show 502)."
     echo "  docker compose ${COMPOSE_FILES[*]} logs api --tail 80"
-    echo "  ss -tlnp | grep 3000"
+    echo "  ss -tlnp | grep ${API_HOST_PORT}"
     exit 1
   fi
   sleep 2
@@ -93,3 +96,8 @@ echo "  Superset:     ${SUPERSET_URL}/"
 echo "  Health:       ${PUBLIC_BASE_URL}/api/health"
 echo ""
 echo "JWT_SECRET is stored in $(production_env_file) — back up this file."
+if [[ "${API_HOST_PORT}" != "3000" ]]; then
+  echo ""
+  echo "API_HOST_PORT=${API_HOST_PORT} — update nginx:"
+  echo "  sudo ./scripts/setup-nginx.sh"
+fi

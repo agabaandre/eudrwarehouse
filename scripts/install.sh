@@ -34,9 +34,11 @@ export SUPERSET_URL="${SUPERSET_URL:-${PUBLIC_BASE_URL%/}/superset}"
 export ENABLE_WAREHOUSE="${ENABLE_WAREHOUSE:-$(production_env_get ENABLE_WAREHOUSE 2>/dev/null || echo false)}"
 
 production_ensure_jwt_secret
+production_pick_api_host_port
 production_persist_deploy_vars
 production_load_env
 export ENABLE_WAREHOUSE="${ENABLE_WAREHOUSE:-false}"
+export API_HOST_PORT="${API_HOST_PORT:-3000}"
 
 if ! command -v docker >/dev/null 2>&1; then
   echo "Docker is required. Install from https://docs.docker.com/engine/install/"

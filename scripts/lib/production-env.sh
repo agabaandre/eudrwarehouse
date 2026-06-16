@@ -96,7 +96,10 @@ production_require_bash() {
 
 production_warn_root() {
   if [[ "$(id -u)" -eq 0 ]]; then
-    echo "Warning: avoid sudo — run as your normal user (must be in the docker group)."
+    echo "Warning: avoid sudo for deploy — run as your normal user (docker group)."
     echo "  sudo usermod -aG docker \$USER && newgrp docker"
+  elif [[ ! -w "${ROOT_DIR}/scripts" ]]; then
+    echo "Warning: repo files may be owned by root from a prior sudo deploy."
+    echo "  Fix: sudo chown -R \$(whoami):\$(whoami) ${ROOT_DIR}"
   fi
 }

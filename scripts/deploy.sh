@@ -19,6 +19,8 @@ production_require_bash
 production_warn_root
 
 SERVER_HOST="${1:-${SERVER_IP:-}}"
+# Strip accidental typos like 41.186.86.12.sh
+SERVER_HOST="$(echo "$SERVER_HOST" | sed -E 's/\.sh$//' | sed 's/[^a-zA-Z0-9._-]//g')"
 production_load_env
 
 if [[ -z "$SERVER_HOST" && -n "${PUBLIC_BASE_URL:-}" ]]; then
@@ -46,9 +48,9 @@ fi
 echo "Deploying to ${PUBLIC_BASE_URL}..."
 echo "  Warehouse stack: ${ENABLE_WAREHOUSE}"
 
-chmod +x scripts/build-frontend.sh
-if command -v npm >/dev/null 2>&1; then
-  ./scripts/build-frontend.sh
+# Do not fail deploy if a prior sudo run left root-owned scripts
+if command -v npm >/dev/null 2>&1 && [[ -f scripts/build-frontend.sh ]]; then
+  bash scripts/build-frontend.sh
 else
   echo "npm not found — Docker will build the Vue frontend during image build"
 fi

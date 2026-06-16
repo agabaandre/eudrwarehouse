@@ -57,9 +57,9 @@ echo "Installing MAAIF EUDR Platform..."
 echo "  Public URL: ${PUBLIC_BASE_URL}"
 echo "  Warehouse stack: ${ENABLE_WAREHOUSE:-false}"
 
-chmod +x scripts/build-frontend.sh scripts/deploy.sh scripts/setup-nginx.sh
-if command -v npm >/dev/null 2>&1; then
-  ./scripts/build-frontend.sh
+chmod +x scripts/*.sh 2>/dev/null || echo "Note: run once to fix script permissions: sudo chown -R \$(whoami) $ROOT_DIR"
+if command -v npm >/dev/null 2>&1 && [[ -f scripts/build-frontend.sh ]]; then
+  bash scripts/build-frontend.sh
 else
   echo "npm not found — Docker will build the Vue frontend during image build"
 fi

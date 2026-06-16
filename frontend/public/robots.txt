@@ -1,0 +1,15 @@
+# MAAIF EUDR Compliance Platform
+# Public pages are indexable; admin and API routes are blocked.
+
+User-agent: *
+Allow: /
+Allow: /analytics
+Allow: /maps
+Allow: /registration
+
+Disallow: /management
+Disallow: /api/
+Disallow: /superset/
+
+# Sitemap (update host after deployment)
+Sitemap: /sitemap.xml

@@ -6,7 +6,19 @@ const { authMiddleware } = require('../middleware/auth');
 const { runWarehouseSync, getWarehouseStatus } = require('../services/warehouse');
 
 const router = express.Router();
-const geoDir = path.join(__dirname, '../../../public/data');
+
+function resolveGeoDir() {
+  const candidates = [
+    path.join(__dirname, '../../public/data'),     // Docker: /app/public/data
+    path.join(__dirname, '../../../public/data'),  // Local monorepo dev
+  ];
+  for (const dir of candidates) {
+    if (fs.existsSync(dir)) return dir;
+  }
+  return candidates[0];
+}
+
+const geoDir = resolveGeoDir();
 
 const LAYERS = {
   districts: {

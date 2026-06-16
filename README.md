@@ -9,21 +9,25 @@ A modern data platform for demonstrating EU Deforestation Regulation (EUDR) comp
 ## Table of Contents
 
 1. [Overview](#overview)
-2. [Quick Start](#quick-start)
-3. [Deployment Modes](#deployment-modes)
-4. [Architecture](#architecture)
-5. [Data Warehouse (Star Schema)](#data-warehouse-star-schema)
-6. [Apache Superset BI](#apache-superset-bi)
-7. [Dashboards & Maps](#dashboards--maps)
-8. [Configuration Reference](#configuration-reference)
-9. [REST API Reference](#rest-api-reference)
-10. [Data Ingestion](#data-ingestion)
-11. [Geospatial Layers](#geospatial-layers)
-12. [Mobile Integration](#mobile-integration)
-13. [Sample Data](#sample-data)
-14. [Development](#development)
-15. [Troubleshooting](#troubleshooting)
-16. [Future Enhancements](#future-enhancements)
+2. [Modern Frontend](#modern-frontend)
+3. [SEO & Crawler Protection](#seo--crawler-protection)
+4. [Performance & Scaling](#performance--scaling)
+5. [Quick Start](#quick-start)
+6. [Deployment Modes](#deployment-modes)
+7. [Architecture](#architecture)
+8. [Data Warehouse (Star Schema)](#data-warehouse-star-schema)
+9. [Apache Superset BI](#apache-superset-bi)
+10. [Dashboards & Maps](#dashboards--maps)
+11. [Configuration Reference](#configuration-reference)
+12. [REST API Reference](#rest-api-reference)
+13. [Data Ingestion](#data-ingestion)
+14. [Geospatial Layers](#geospatial-layers)
+15. [Mobile Integration](#mobile-integration)
+16. [Sample Data](#sample-data)
+17. [Production Deployment & Nginx Security](#production-deployment--nginx-security)
+18. [Development](#development)
+19. [Troubleshooting](#troubleshooting)
+20. [Future Enhancements](#future-enhancements)
 
 ---
 
@@ -33,23 +37,173 @@ This platform demonstrates a production-style data architecture for national-sca
 
 | Layer | Technology | Role |
 |-------|-----------|------|
-| **OLTP** | PostgreSQL 16 | Farmers, farm plots, compliance records, ingestion |
-| **OLAP** | Apache Doris 2.1 | Star-schema data warehouse for analytics |
-| **BI** | Apache Superset 3.1 | Self-service dashboards and SQL Lab |
-| **API** | Node.js / Express | REST APIs, ETL orchestration, auth |
-| **Viz** | Highcharts | Public & management dashboards (credits disabled) |
-| **GIS** | GeoJSON + Highcharts Maps | District, regional, risk, and farm-level maps |
+| **OLTP** | PostgreSQL 16 | Operational database for transactional workloads: farmer and exporter registration, farm plot boundaries with GPS coordinates, compliance assessments, supply-chain links, SMS alerts, training enrolments, and USSD channel records. Handles CSV/Excel ingestion writes, enforces relational integrity across districts and commodities, and serves as the system of record for all field data before warehouse sync. |
+| **OLAP** | Apache Doris 2.1 | Column-oriented analytics warehouse storing a star-schema model (dimensions for farmers, districts, time; facts for production, compliance, exports). Receives periodic ETL from PostgreSQL for heavy aggregations — district rankings, trend analysis, and cross-regional reporting — without burdening the OLTP database during peak registration or ingestion loads. |
+| **BI** | Apache Superset 3.1 | Self-service business intelligence layer connected to Doris and PostgreSQL. Officers build custom dashboards, run ad-hoc SQL in SQL Lab, and share compliance reports with exporters and EU auditors. Proxied at `/superset/` behind nginx so port 8088 stays internal; supports optional public or authenticated-only access. |
+| **Frontend** | Vue 3 + Vite | Single-page application serving all user-facing pages: pitch landing, registration hub, public analytics, geospatial map gallery, and authenticated management dashboard. Includes 7-language i18n (English, Luganda, Swahili, and four Ugandan regional languages), per-route SEO meta tags, responsive mobile navigation, and code-split bundles for fast initial load. |
+| **API** | Node.js / Express | REST API gateway and orchestration layer: JWT authentication, rate limiting, gzip compression, and connection pooling for 200+ concurrent users. Exposes registration, analytics, geo, ingestion, warehouse sync, and mobile/USSD endpoints; runs ETL jobs to Doris; serves the built Vue SPA and dynamic `robots.txt` / `sitemap.xml`. |
+| **Cache** | Redis 7 | In-memory cache layer for hot read paths: analytics dashboards, GeoJSON map layers, auth config, training modules, supply-chain summaries, and district lists. Uses LRU eviction (256 MB cap) with TTL-based expiry. Shares rate-limit counters across Node cluster workers. Cache is invalidated automatically on registration, ingestion, and warehouse sync. |
+| **Viz** | Highcharts Maps | Embedded charting engine for dashboards — pie, line, bar, column, area, and choropleth series on public analytics and management views. Highcharts Maps module powers interactive Uganda basemaps with farm plot point layers coloured by compliance status. Credits disabled for a clean government presentation. |
+| **GIS** | GeoJSON + Highcharts Maps | Geospatial data layer delivering five map types: district boundaries, regional groupings, coffee belt polygons, deforestation risk zones, and geolocated farm plot clusters. GeoJSON served via `/api/geo/layers` with client-side rendering; supports metric switching (compliance %, risk score, production tonnes) and map navigation controls. |
 
 ### Key Capabilities
 
-- Public unauthenticated analytics dashboard
-- Authenticated strategic management dashboard
-- Five interactive geospatial map layers
+- **Modern Vue 3 frontend** — pitch-ready landing page, responsive navigation, 7-language i18n
+- Public unauthenticated analytics dashboard with SEO-optimised pages
+- Authenticated strategic management dashboard (blocked from search engines)
+- Farmer & exporter registration hub with USSD *284#, SMS alerts, training videos
+- Supply chain traceability from farm plot to export batch
+- Five interactive geospatial map layers with farm plot clusters
 - CSV / Excel / API data ingestion pipelines
 - Periodic ETL sync from PostgreSQL → Doris
-- Apache Superset for advanced self-service reporting
-- Configurable public/private Superset access
+- Apache Superset BI proxied at `/superset/` (no public port 8088 required)
 - REST APIs ready for mobile field applications
+- Production hardening for 200+ concurrent users (pooling, rate limits, nginx)
+
+---
+
+## Modern Frontend
+
+The UI is a **Vue 3 + Vite** single-page application designed as a competitive pitch product for national EUDR programmes.
+
+### Design System
+
+| Feature | Implementation |
+|---------|----------------|
+| Typography | [Inter](https://fonts.google.com/specimen/Inter) via Google Fonts |
+| Colour palette | MAAIF green (`#0d5c28` → `#1a7f37`), gold accent, slate neutrals |
+| Layout | CSS custom properties, card-based grids, sticky glass header |
+| Motion | Subtle hover lifts; `prefers-reduced-motion` respected |
+| Icons | Semantic emoji icons on feature cards (zero extra dependencies) |
+
+### Pages
+
+| Route | Purpose |
+|-------|---------|
+| `/` | Pitch landing — hero, live KPI stats, trust bar, feature grid, CTA |
+| `/registration` | Multi-tab hub: supply chain, farmer/exporter forms, training, USSD, SMS |
+| `/analytics` | Public Highcharts dashboards — production, compliance, risk |
+| `/maps` | Five geospatial layers with district choropleths and farm clusters |
+| `/management` | Auth-gated leadership dashboard (not indexed by search engines) |
+
+### Internationalisation
+
+Seven locales via `vue-i18n`: English, Luganda, Swahili, Runyankole, Ateso, Acholi, Lusoga. Locale persists in `localStorage`.
+
+### Build Optimisation
+
+- Code-split vendor bundles (`vue`, `highcharts`) for faster first paint
+- Static assets cached 7 days in production
+- `npm run build` outputs to `frontend/dist` → copied to `public/` for Express
+
+---
+
+## SEO & Crawler Protection
+
+Public pages are optimised for discoverability; admin and API routes are explicitly blocked.
+
+### Per-Route Meta Tags
+
+`frontend/src/composables/useSeo.js` sets on every navigation:
+
+- `<title>` and meta description
+- Open Graph (`og:title`, `og:description`, `og:image`, `og:url`)
+- Twitter Card tags
+- Canonical URL
+- `robots` directive per route
+
+| Route | robots |
+|-------|--------|
+| `/`, `/analytics`, `/maps`, `/registration` | `index, follow` |
+| `/management` | `noindex, nofollow, noarchive, nosnippet` |
+
+### robots.txt & Sitemap
+
+- **Static:** `frontend/public/robots.txt` — disallows `/management`, `/api/`, `/superset/`
+- **Dynamic:** `GET /robots.txt` and `GET /sitemap.xml` — generated with `PUBLIC_BASE_URL` for correct absolute URLs in production
+
+### Server-Side Protection
+
+Express and nginx both emit `X-Robots-Tag: noindex` for:
+
+- `/management` (SPA and all subpaths)
+- `/api/*`
+- `/superset/*`
+
+### Open Graph Image
+
+`frontend/public/og-image.svg` — branded 1200×630 share image for social previews.
+
+---
+
+## Performance & Scaling
+
+Tuned for **200+ concurrent users** on a single modest server.
+
+### Application Layer
+
+| Setting | Default | Purpose |
+|---------|---------|---------|
+| `CLUSTER_WORKERS` | `2` (production) | Node.js cluster mode — multi-process API |
+| `PG_POOL_MAX` | `25` | PostgreSQL connection pool per worker |
+| `RATE_LIMIT_API_MAX` | `300`/min | General API rate limit per IP |
+| `RATE_LIMIT_AUTH_MAX` | `20`/15min | Login brute-force protection |
+| `RATE_LIMIT_INGEST_MAX` | `10`/min | Upload throttling |
+| `REDIS_URL` | `redis://redis:6379` | Redis connection (Docker); disable with `REDIS_ENABLED=false` |
+| `CACHE_TTL_ANALYTICS` | `120`s | Analytics API response cache |
+| `CACHE_TTL_GEO` | `3600`s | GeoJSON layer cache |
+
+```bash
+# Recommended production env for 200+ concurrent users
+export CLUSTER_WORKERS=4
+export PG_POOL_MAX=25
+export RATE_LIMIT_API_MAX=300
+export REDIS_URL=redis://redis:6379
+```
+
+### Redis Caching
+
+Redis accelerates the most-requested read endpoints and unifies rate limiting across cluster workers:
+
+| Namespace | Endpoints | Default TTL | Invalidated on |
+|-----------|-----------|-------------|----------------|
+| `analytics` | `/api/analytics/*` | 120s | Ingestion, registration, warehouse sync |
+| `geo` | `/api/geo/*` | 3600s | Ingestion, registration |
+| `config` | `/api/auth/config` | 300s | Manual / deploy |
+| `supply` | `/api/supply-chain/*` | 60s | Registration, ingestion |
+| `training` | `/api/training/*` | 1800s | — |
+| `registration` | `/api/registration/districts` | 3600s | — |
+| `warehouse` | `/api/warehouse/status` | 30s | Warehouse sync |
+
+Responses include an `X-Cache: HIT` or `X-Cache: MISS` header when Redis is connected. If Redis is unavailable, the API continues without caching (in-memory rate limits per worker only).
+
+```bash
+# Verify Redis in health check
+curl http://localhost:3000/api/health
+# → {"status":"ok","redis":"connected",...}
+
+# Watch cache hits in response headers
+curl -I http://localhost:3000/api/analytics/kpis
+# X-Cache: HIT
+```
+
+### Middleware Stack
+
+- **gzip compression** on all responses
+- **Security headers** (`X-Content-Type-Options`, `Referrer-Policy`, etc.)
+- **Static asset caching** — hashed JS/CSS cached 7 days; `index.html` never cached
+
+### Database
+
+PostgreSQL pool with configurable `max`, `idleTimeoutMillis`, and `connectionTimeoutMillis`. Analytics queries use indexed columns; warehouse offload via Doris for heavy reporting.
+
+### Nginx (External Reverse Proxy)
+
+See [Production Deployment & Nginx Security](#production-deployment--nginx-security) for rate limiting, connection limits, keepalive upstream, and bot blocking.
+
+### Horizontal Scaling
+
+For 500+ users, run multiple API containers behind nginx `upstream` with shared PostgreSQL and Redis. Rate limits and response caches are shared via Redis across all workers and replicas.
 
 ---
 
@@ -59,7 +213,7 @@ This platform demonstrates a production-style data architecture for national-sca
 
 - [Docker](https://docs.docker.com/get-docker/) 24+ and Docker Compose v2
 - 8 GB RAM recommended for full warehouse stack
-- Ports: `3000` (API), `5432` (PostgreSQL), `8088` (Superset), `9030` (Doris)
+- Ports: `3000` (API), `5432` (PostgreSQL), `6379` (Redis), `8088` (Superset), `9030` (Doris)
 
 ### Option A — Basic Demo (fastest, ~1 min)
 
@@ -70,7 +224,16 @@ cd eudr-platform
 docker compose up --build
 ```
 
-Open **http://localhost:3000**
+Open **http://localhost:3000** (Vue SPA — all routes served from `/`)
+
+| Page | URL | Login |
+|------|-----|-------|
+| Home | http://localhost:3000/ | — |
+| **Registration Hub** | http://localhost:3000/registration | — |
+| Public analytics | http://localhost:3000/analytics | — |
+| Management dashboard | http://localhost:3000/management | `admin@admin.com` / `admin` |
+| Geo map gallery | http://localhost:3000/maps | — |
+| API health | http://localhost:3000/api/health | — |
 
 ### Option B — Full Modern Data Warehouse (~3–5 min first run)
 
@@ -83,12 +246,9 @@ docker compose -f docker-compose.yml -f docker-compose.warehouse.yml up --build
 
 | Service | URL | Login |
 |---------|-----|-------|
-| Landing page | http://localhost:3000 | — |
-| Public analytics | http://localhost:3000/analytics/ | — |
-| Management dashboard | http://localhost:3000/management/ | `admin@admin.com` / `admin` |
-| Geo map gallery | http://localhost:3000/maps/ | — |
+| Landing page | http://localhost:3000/ | — |
+| Registration hub | http://localhost:3000/registration | — |
 | **Apache Superset** | **http://localhost:8088** | **`admin` / `admin`** |
-| API health | http://localhost:3000/api/health | — |
 | Warehouse status | http://localhost:3000/api/warehouse/status | — |
 
 ### Make Superset Public on Landing Page
@@ -110,7 +270,7 @@ SUPERSET_PUBLIC_ENABLED=true
 ┌─────────────────────────────────────────────────────────────────┐
 │  MODE 1: docker compose up                                      │
 │  ┌──────────┐    ┌─────────┐                                     │
-│  │ PostgreSQL│◄──│ Node API │──► Highcharts Dashboards         │
+│  │ PostgreSQL│◄──│ Node API │──► Vue 3 SPA (Highcharts)        │
 │  └──────────┘    └─────────┘                                     │
 ├─────────────────────────────────────────────────────────────────┤
 │  MODE 2: docker compose -f docker-compose.yml                   │
@@ -130,6 +290,8 @@ SUPERSET_PUBLIC_ENABLED=true
 
 ```
 Field/Mobile Apps ──► REST API ──► PostgreSQL (OLTP)
+                        │    │           │
+                        │    └──► Redis (cache + rate limits)
                         │                │
                         │         CSV/Excel/API Ingestion
                         ▼                │
@@ -142,7 +304,7 @@ Field/Mobile Apps ──► REST API ──► PostgreSQL (OLTP)
               ┌─────────┴──────────┐
               ▼                    ▼
         Highcharts Dashboards   Apache Superset
-        (built-in MVP)          (self-service BI)
+        (Vue 3 SPA)             (self-service BI)
 ```
 
 ### ETL Pipeline
@@ -231,16 +393,17 @@ Quick steps:
 
 ## Dashboards & Maps
 
-### Built-in Dashboards (Highcharts)
+### Vue 3 Application Pages
 
-| Dashboard | URL | Auth | Based On |
-|-----------|-----|------|----------|
-| Landing | `/` | None | — |
-| Public Analytics | `/analytics/` | None | Sample Analytics Dashboard PDF |
-| Management Strategic | `/management/` | `admin@admin.com` / `admin` | Sample Strategic Dashboard PDF |
-| Geo Map Gallery | `/maps/` | None | 5 interactive map layers |
+| Page | URL | Auth |
+|------|-----|------|
+| Home | `/` | None |
+| **Registration Hub** | `/registration` | None — farmers, exporters, supply chain, training, USSD, SMS |
+| Public Analytics | `/analytics` | None |
+| Management Strategic | `/management` | `admin@admin.com` / `admin` |
+| Geo Map Gallery | `/maps` | None |
 
-### Geo Map Gallery (`/maps/`)
+### Geo Map Gallery (`/maps`)
 
 | Layer ID | Name | Type | Metric Options |
 |----------|------|------|----------------|
@@ -397,7 +560,7 @@ Farm plot clusters are generated dynamically from the database (`/api/geo/layers
 
 1. Add a `.geojson` file to `public/data/`
 2. Register in `backend/src/routes/geo.js` → `LAYERS` object
-3. Layer appears automatically in `/maps/` gallery and API
+3. Layer appears automatically in `/maps` gallery and API
 
 ---
 
@@ -546,9 +709,114 @@ Open **http://YOUR_SERVER_IP:8003** — you should see the MAAIF EUDR landing pa
 
 ---
 
+## Production Deployment & Nginx Security
+
+When exposing the platform on a public IP (e.g. `http://41.186.86.12:8003`), use the included nginx configuration with security hardening.
+
+### Install Nginx + Security Snippets
+
+```bash
+sudo ./scripts/setup-nginx.sh
+```
+
+This copies:
+
+- `deploy/nginx/eudr-platform.conf` — main server block
+- `deploy/nginx/snippets/eudr-security.conf` — rate limit zones, bot map, headers
+- `deploy/nginx/snippets/eudr-proxy.conf` — shared proxy settings
+
+### Nginx Security Features
+
+| Feature | Configuration |
+|---------|---------------|
+| Rate limiting | 30 req/s general, 60 req/s API, 5 req/min auth login |
+| Connection limit | 50 concurrent connections per IP |
+| Bad bot blocking | Blocks nikto, sqlmap, nmap, empty user-agent, etc. |
+| Security headers | `X-Content-Type-Options`, `X-Frame-Options`, `Referrer-Policy` |
+| Admin noindex | `X-Robots-Tag` on `/management` and `/superset/` |
+| Static caching | 7-day cache for JS/CSS/images |
+| Keepalive upstream | 32 persistent connections to API |
+| Superset proxy | `/superset/` → `127.0.0.1:8088` (port 8088 not public) |
+
+### Fail2ban Policies
+
+Example jails in `deploy/fail2ban/`:
+
+| Jail | Trigger | Ban duration |
+|------|---------|--------------|
+| `nginx-limit-req` | Rate limit exceeded (10 hits in 60s) | 2 hours |
+| `nginx-botsearch` | Probes for `.env`, `wp-admin`, `.git` (2 hits) | 24 hours |
+| `nginx-eudr-auth` | Failed `POST /api/auth/login` (8 hits in 5 min) | 1 hour |
+
+```bash
+# Install on Ubuntu/Debian
+sudo apt install fail2ban
+
+sudo cp deploy/fail2ban/nginx-*.conf /etc/fail2ban/filter.d/
+sudo cp deploy/fail2ban/jail.local.example /etc/fail2ban/jail.d/eudr.local
+sudo systemctl restart fail2ban
+
+# Check banned IPs
+sudo fail2ban-client status nginx-limit-req
+```
+
+### Recommended Additional Hardening
+
+1. **TLS/HTTPS** — terminate SSL at nginx with Let's Encrypt (`certbot`)
+2. **Firewall** — `ufw allow 8003/tcp` only; block direct access to ports 3000, 5432, 8088
+3. **JWT_SECRET** — use a strong random value in production (`openssl rand -hex 32`)
+4. **Superset** — bind to `127.0.0.1:8088` only (default in `docker-compose.prod.warehouse.yml`)
+5. **Log monitoring** — ship `/var/log/nginx/access.log` to your SIEM
+
+### Production Environment
+
+```bash
+export PUBLIC_BASE_URL=http://YOUR_SERVER_IP:8003
+export SUPERSET_URL=http://YOUR_SERVER_IP:8003/superset
+export ENABLE_WAREHOUSE=true
+export JWT_SECRET=$(openssl rand -hex 32)
+export CLUSTER_WORKERS=4
+export PG_POOL_MAX=25
+
+./scripts/deploy.sh YOUR_SERVER_IP
+sudo ./scripts/setup-nginx.sh
+```
+
+---
+
 ## Development
 
-### Local (without Docker)
+### Frontend (Vue 3 + Vite)
+
+The UI is a Vue 3 SPA in `frontend/`. Production builds output to `public/` and are served by Express.
+
+**Key directories:**
+
+```
+frontend/
+├── src/views/           # Page components (Home, Analytics, Maps, Registration, Management)
+├── src/components/      # AppHeader (sticky nav + mobile menu), AppFooter
+├── src/composables/     # api.js, highcharts.js, useSeo.js
+├── src/i18n/locales/    # 7 language files
+└── public/              # robots.txt, sitemap.xml, favicon, og-image, GeoJSON
+```
+
+```bash
+# Terminal 1 — API
+cd backend && npm install && npm start
+
+# Terminal 2 — Vue dev server (proxies /api → :3000)
+cd frontend && npm install && npm run dev
+```
+
+Open **http://localhost:5173** for hot-reload development.
+
+```bash
+# Production build → frontend/dist (Docker copies to public/)
+cd frontend && npm run build && cp -r dist/* ../public/
+```
+
+### Local API (without Docker)
 
 ```bash
 # Requires local PostgreSQL
@@ -564,12 +832,14 @@ npm start
 
 ```
 eudr-platform/
-├── docker-compose.yml              # Base: PostgreSQL + API
+├── docker-compose.yml              # Base: PostgreSQL + Redis + API
 ├── docker-compose.warehouse.yml    # Overlay: Doris + Superset
 ├── docker-compose.prod.yml         # Production: bind API to 0.0.0.0
 ├── docker-compose.prod.warehouse.yml
 ├── deploy/nginx/
-│   └── eudr-platform.conf        # Reverse proxy for port 80 → :3000
+│   ├── eudr-platform.conf          # Reverse proxy + rate limits
+│   └── snippets/                   # Security zones, proxy headers
+├── deploy/fail2ban/                # Bot protection jail examples
 ├── scripts/
 │   ├── install.sh                  # First-time server install
 │   ├── deploy.sh                   # Update/redeploy on server
@@ -577,21 +847,24 @@ eudr-platform/
 ├── .github/workflows/
 │   ├── docker-build.yml            # CI: build & smoke test
 │   └── deploy.yml                  # CD: SSH deploy to server
+├── frontend/                       # Vue 3 SPA (Vite)
+│   ├── src/views/                  # Page components
+│   ├── src/components/             # Shared layout components
+│   ├── src/composables/            # API & Highcharts helpers
+│   └── src/composables/useSeo.js   # Per-route SEO meta tags
 ├── backend/
 │   ├── src/
+│   │   ├── middleware/security.js  # Compression, rate limits, headers
 │   │   ├── config/                 # Environment configuration
-│   │   ├── db/                     # PostgreSQL & Doris clients
+│   │   ├── db/                     # PostgreSQL, Doris & Redis clients
+│   │   ├── services/cache.js       # Redis cache get/set/invalidate
+│   │   ├── middleware/cache.js     # HTTP response cache middleware
 │   │   ├── routes/                 # REST API routes
 │   │   ├── services/warehouse.js   # Star-schema ETL
 │   │   └── scripts/                # Migrations, seed, sync
-│   └── Dockerfile
-├── superset/                       # Superset Docker image & init
-├── public/                         # Frontend dashboards
-│   ├── analytics/                  # Public dashboard
-│   ├── management/                 # Strategic dashboard
-│   ├── maps/                       # Geo map gallery
-│   ├── data/                       # GeoJSON layers
-│   └── js/                         # Highcharts logic
+│   └── Dockerfile                  # Multi-stage: builds Vue + API image
+├── public/                         # Vue build output (generated)
+│   └── data/                       # GeoJSON map layers
 └── docs/
     ├── SUPERSET_GUIDE.md
     ├── FUTURE_ENHANCEMENTS.md

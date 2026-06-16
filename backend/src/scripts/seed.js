@@ -1,6 +1,8 @@
 const bcrypt = require('bcryptjs');
 const db = require('../db/postgres');
 const config = require('../config');
+const { seedRegistration } = require('./seed-registration');
+const { seedExtraData } = require('./seed-extra-data');
 
 const districts = [
   { name: 'Kabale', region: 'Western', compliance_rate: 97.8, risk_score: 12, total_farms: 62500, production_tons: 56400, export_value_ugx_b: 168 },
@@ -78,11 +80,9 @@ async function seed() {
   const { rows: existing } = await db.query('SELECT COUNT(*)::int AS c FROM districts');
   if (existing[0].c > 0) {
     console.log('Database already seeded, skipping');
-    return;
-  }
-
-  const hash = await bcrypt.hash(config.admin.password, 10);
-  await db.query(
+  } else {
+    const hash = await bcrypt.hash(config.admin.password, 10);
+    await db.query(
     'INSERT INTO users (email, password_hash, role) VALUES ($1, $2, $3)',
     [config.admin.email, hash, 'admin']
   );
@@ -192,6 +192,10 @@ async function seed() {
   }
 
   console.log('Database seeded with EUDR demonstration data');
+  }
+
+  await seedRegistration();
+  await seedExtraData();
 }
 
 if (require.main === module) {

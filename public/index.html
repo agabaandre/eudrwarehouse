@@ -1,103 +1,24 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>MAAIF EUDR Compliance Platform</title>
-  <link rel="stylesheet" href="/css/styles.css">
-</head>
-<body>
-  <header class="header">
-    <div>
-      <h1>MAAIF EUDR Compliance Platform</h1>
-      <div class="subtitle">Ministry of Agriculture, Animal Industry and Fisheries — Uganda</div>
-    </div>
-    <nav>
-      <a href="/analytics/">Public Dashboard</a>
-      <a href="/management/">Management</a>
-      <a href="/maps/">Geo Maps</a>
-      <a href="#" id="superset-link" style="display:none">Superset BI</a>
-      <a href="/api/mobile">API</a>
-    </nav>
-  </header>
-
-  <div class="container">
-    <section class="hero">
-      <h2>EU Deforestation Regulation Compliance Demonstration</h2>
-      <p>
-        Modern data warehouse platform with PostgreSQL OLTP, Apache Doris OLAP star schema,
-        Apache Superset self-service BI, geospatial compliance maps, and REST APIs for mobile integration.
-      </p>
-      <a href="/analytics/" class="btn btn-primary">Public Analytics Dashboard</a>
-      <a href="/management/" class="btn btn-secondary">Management Dashboard</a>
-      <a href="/maps/" class="btn btn-secondary">Geo Map Gallery</a>
-      <a href="#" id="superset-hero-btn" class="btn btn-secondary" style="display:none">Open Superset Reports</a>
-    </section>
-
-    <div class="cards">
-      <div class="card">
-        <h3>Public Analytics</h3>
-        <p>Production trends, district compliance, exporter performance, risk analysis, and custom report builder — no login required.</p>
-      </div>
-      <div class="card">
-        <h3>Strategic Management</h3>
-        <p>KPI overview, compliance trends, geospatial farm mapping, risk heatmaps, and alerts for MAAIF leadership.</p>
-      </div>
-      <div class="card" id="superset-card" style="display:none">
-        <h3>Apache Superset BI</h3>
-        <p>Self-service dashboards and SQL Lab connected to the Doris data warehouse. Build custom EUDR compliance reports.</p>
-        <p style="margin-top:0.5rem;font-size:0.85rem;color:#6b7280" id="superset-creds"></p>
-      </div>
-      <div class="card">
-        <h3>Geospatial Maps</h3>
-        <p>Five map layers: district compliance, regional overview, coffee belt, risk zones, and farm plot clusters with drill-down.</p>
-        <a href="/maps/" style="font-size:0.9rem">Open Map Gallery →</a>
-      </div>
-      <div class="card">
-        <h3>Data Warehouse</h3>
-        <p>PostgreSQL → ETL → Apache Doris star schema (dimensions + facts). Periodic sync with warehouse status API.</p>
-      </div>
-      <div class="card">
-        <h3>REST API & Mobile</h3>
-        <p>Full REST API for farmers, farm plots, compliance records, analytics, and geo layers. Ready for field mobile apps.</p>
-      </div>
-    </div>
-
-    <div id="user-guide-section" class="user-guide" style="display:none">
-      <h4>Quick Start Guide</h4>
-      <p><strong>Public Dashboard:</strong> Explore national EUDR compliance data at <a href="/analytics/">/analytics/</a></p>
-      <p><strong>Management Dashboard:</strong> Login with <code>admin@admin.com</code> / <code>admin</code></p>
-      <p><strong>Superset BI:</strong> <span id="superset-guide">Start warehouse stack to enable</span></p>
-      <p><strong>Geo Maps:</strong> <a href="/maps/">/maps/</a> — 5 interactive layers with compliance & risk overlays</p>
-      <p><strong>Warehouse API:</strong> <code>GET /api/warehouse/status</code> · <code>POST /api/warehouse/sync</code> (auth required)</p>
-    </div>
-  </div>
-
-  <footer class="footer">
-    Ministry of Agriculture, Animal Industry and Fisheries (MAAIF) — EUDR Platform v1.1
-  </footer>
-
-  <script>
-    fetch('/api/auth/config').then(r => r.json()).then(cfg => {
-      if (cfg.public_user_guide_enabled) {
-        document.getElementById('user-guide-section').style.display = 'block';
-      }
-      const superset = cfg.superset || {};
-      if (superset.url) {
-        const showPublic = superset.public_enabled;
-        const links = ['superset-link', 'superset-hero-btn', 'superset-card'];
-        if (showPublic) {
-          links.forEach(id => { const el = document.getElementById(id); if (el) el.style.display = id === 'superset-card' ? 'block' : 'inline-block'; });
-          [document.getElementById('superset-link'), document.getElementById('superset-hero-btn')].forEach(a => {
-            if (a) { a.href = superset.url; a.target = '_blank'; }
-          });
-          if (superset.admin_user) {
-            document.getElementById('superset-creds').textContent = `Login: ${superset.admin_user} / ${superset.admin_password}`;
-            document.getElementById('superset-guide').innerHTML = `<a href="${superset.url}" target="_blank">${superset.url}</a> — ${superset.admin_user} / ${superset.admin_password}`;
-          }
-        }
-      }
-    });
-  </script>
-</body>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="Uganda's national EUDR compliance platform — farmer registration, supply chain traceability, geospatial maps, and analytics by MAAIF." />
+    <meta name="robots" content="index, follow" />
+    <meta name="theme-color" content="#0d5c28" />
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="MAAIF EUDR Platform" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+    <title>MAAIF EUDR Compliance Platform</title>
+    <script type="module" crossorigin src="/assets/index-Beh4jQga.js"></script>
+    <link rel="modulepreload" crossorigin href="/assets/vendor-vue-BOzWAVEh.js">
+    <link rel="modulepreload" crossorigin href="/assets/vendor-charts-DACjVWK6.js">
+    <link rel="stylesheet" crossorigin href="/assets/index-7_UXThIm.css">
+  </head>
+  <body>
+    <div id="app"></div>
+  </body>
 </html>

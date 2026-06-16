@@ -1,0 +1,42 @@
+# Fail2ban configuration for EUDR platform nginx
+# Copy to server:
+#   sudo cp deploy/fail2ban/jail.local.example /etc/fail2ban/jail.d/eudr.local
+#   sudo cp deploy/fail2ban/nginx-limit-req.conf /etc/fail2ban/filter.d/nginx-limit-req.conf
+#   sudo cp deploy/fail2ban/nginx-botsearch.conf /etc/fail2ban/filter.d/nginx-botsearch.conf
+#   sudo systemctl restart fail2ban
+
+[DEFAULT]
+bantime  = 3600
+findtime = 600
+maxretry = 5
+backend  = auto
+
+# Ban IPs that trigger nginx rate limiting (429/503)
+[nginx-limit-req]
+enabled  = true
+port     = http,https
+filter   = nginx-limit-req
+logpath  = /var/log/nginx/error.log
+maxretry = 10
+findtime = 60
+bantime  = 7200
+
+# Ban aggressive scanners probing for wp-admin, .env, etc.
+[nginx-botsearch]
+enabled  = true
+port     = http,https
+filter   = nginx-botsearch
+logpath  = /var/log/nginx/access.log
+maxretry = 2
+findtime = 300
+bantime  = 86400
+
+# Ban repeated failed login attempts (API returns 401/429)
+[nginx-eudr-auth]
+enabled  = true
+port     = http,https
+filter   = nginx-eudr-auth
+logpath  = /var/log/nginx/access.log
+maxretry = 8
+findtime = 300
+bantime  = 3600

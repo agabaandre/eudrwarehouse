@@ -6,6 +6,7 @@ set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 CONF_SRC="${ROOT_DIR}/deploy/nginx/eudr-platform.conf"
+SNIPPETS_SRC="${ROOT_DIR}/deploy/nginx/snippets"
 
 if [[ "$(id -u)" -ne 0 ]]; then
   echo "Run as root: sudo $0"
@@ -23,6 +24,9 @@ if ! command -v nginx >/dev/null 2>&1; then
     exit 1
   fi
 fi
+
+mkdir -p /etc/nginx/snippets
+cp "${SNIPPETS_SRC}/"*.conf /etc/nginx/snippets/
 
 if [[ -d /etc/nginx/sites-available ]]; then
   # Debian/Ubuntu
@@ -43,7 +47,15 @@ systemctl enable nginx
 systemctl reload nginx
 
 echo ""
-echo "Nginx configured: port 80 → http://127.0.0.1:3000"
-echo "If your firewall maps external port 8003 to internal port 80, use:"
+echo "Nginx configured:"
+echo "  Platform:  http://YOUR_SERVER_IP:8003/"
+echo "  Superset:  http://YOUR_SERVER_IP:8003/superset/  (requires ENABLE_WAREHOUSE=true)"
+echo ""
 echo "  export PUBLIC_BASE_URL=http://YOUR_SERVER_IP:8003"
-echo "  ./scripts/deploy.sh YOUR_SERVER_IP"
+echo "  export SUPERSET_URL=http://YOUR_SERVER_IP:8003/superset"
+echo "  export ENABLE_WAREHOUSE=true"
+echo ""
+echo "Optional — install fail2ban bot protection:"
+echo "  sudo cp deploy/fail2ban/*.conf /etc/fail2ban/filter.d/"
+echo "  sudo cp deploy/fail2ban/jail.local.example /etc/fail2ban/jail.d/eudr.local"
+echo "  sudo systemctl restart fail2ban"

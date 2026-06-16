@@ -11,14 +11,8 @@ function resolveSupersetUrl(publicBaseUrl) {
     return process.env.SUPERSET_URL.replace(/\/$/, '');
   }
   if (publicBaseUrl) {
-    try {
-      const url = new URL(publicBaseUrl);
-      url.port = process.env.SUPERSET_PORT || '8088';
-      url.pathname = '';
-      return url.toString().replace(/\/$/, '');
-    } catch {
-      return `http://localhost:8088`;
-    }
+    // Superset is proxied via nginx at /superset (port 8003 public, not 8088)
+    return `${publicBaseUrl.replace(/\/$/, '')}/superset`;
   }
   return 'http://localhost:8088';
 }
@@ -52,5 +46,24 @@ module.exports = {
   admin: {
     email: 'admin@admin.com',
     password: 'admin',
+  },
+  redis: {
+    enabled: process.env.REDIS_ENABLED !== 'false' && !!(process.env.REDIS_URL || process.env.REDIS_HOST),
+    url: process.env.REDIS_URL || (
+      process.env.REDIS_HOST
+        ? `redis://${process.env.REDIS_PASSWORD ? `:${process.env.REDIS_PASSWORD}@` : ''}${process.env.REDIS_HOST}:${process.env.REDIS_PORT || 6379}`
+        : null
+    ),
+    keyPrefix: process.env.REDIS_KEY_PREFIX || 'eudr:v1:',
+    connectTimeoutMs: parseInt(process.env.REDIS_CONNECT_TIMEOUT_MS || '5000', 10),
+    ttl: {
+      analytics: parseInt(process.env.CACHE_TTL_ANALYTICS || '120', 10),
+      geo: parseInt(process.env.CACHE_TTL_GEO || '3600', 10),
+      config: parseInt(process.env.CACHE_TTL_CONFIG || '300', 10),
+      supply: parseInt(process.env.CACHE_TTL_SUPPLY || '60', 10),
+      training: parseInt(process.env.CACHE_TTL_TRAINING || '1800', 10),
+      registration: parseInt(process.env.CACHE_TTL_REGISTRATION || '3600', 10),
+      warehouse: parseInt(process.env.CACHE_TTL_WAREHOUSE || '30', 10),
+    },
   },
 };

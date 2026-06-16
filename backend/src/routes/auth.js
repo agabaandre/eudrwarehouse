@@ -1,12 +1,14 @@
 const express = require('express');
 const config = require('../config');
 const { login } = require('../middleware/auth');
+const { httpCache } = require('../middleware/cache');
+const cache = require('../services/cache');
 
 const router = express.Router();
 
 router.post('/login', login);
 
-router.get('/config', (req, res) => {
+router.get('/config', httpCache('config', cache.TTL.config), (req, res) => {
   const superset = {
     enabled: true,
     url: config.superset.url,
@@ -22,7 +24,8 @@ router.get('/config', (req, res) => {
     public_user_guide_enabled: config.publicUserGuideEnabled,
     public_base_url: config.publicBaseUrl,
     platform: 'MAAIF EUDR Compliance Demonstration Platform',
-    version: '1.1.0',
+    version: '2.0.0',
+    frontend: 'vue3',
     superset,
     warehouse: {
       engine: 'Apache Doris',
@@ -30,6 +33,16 @@ router.get('/config', (req, res) => {
       sync_interval_ms: config.warehouse.syncIntervalMs,
     },
     geo_layers: ['/api/geo/layers'],
+    registration: {
+      hub_url: '/registration',
+      farmer_register: 'POST /api/registration/farmer',
+      exporter_register: 'POST /api/registration/exporter',
+      supply_chain: 'GET /api/supply-chain/network',
+      training: 'GET /api/training/modules',
+      ussd_code: '*284#',
+      sms_alerts: 'GET /api/alerts',
+      mobile_link: 'POST /api/channels/mobile/register',
+    },
   });
 });
 

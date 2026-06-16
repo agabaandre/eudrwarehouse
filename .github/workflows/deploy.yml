@@ -49,12 +49,17 @@ jobs:
             git fetch origin
             git reset --hard origin/main
 
-            export PUBLIC_BASE_URL="http://${SERVER_IP}:3000"
+            export PUBLIC_BASE_URL="http://${SERVER_IP}:8003"
+            export SUPERSET_URL="http://${SERVER_IP}:8003/superset"
             export ENABLE_WAREHOUSE
             export JWT_SECRET="${{ secrets.JWT_SECRET }}"
 
-            chmod +x scripts/install.sh scripts/deploy.sh
+            chmod +x scripts/install.sh scripts/deploy.sh scripts/setup-nginx.sh
             ./scripts/deploy.sh "$SERVER_IP"
+
+            if command -v nginx >/dev/null 2>&1; then
+              sudo ./scripts/setup-nginx.sh || echo "nginx setup skipped (run manually with sudo)"
+            fi
 
       - name: Verify deployment
         uses: appleboy/ssh-action@v1.2.0

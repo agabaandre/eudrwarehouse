@@ -113,6 +113,86 @@ CREATE INDEX IF NOT EXISTS idx_farmers_district ON farmers(district_id);
 CREATE INDEX IF NOT EXISTS idx_farm_plots_district ON farm_plots(district_id);
 CREATE INDEX IF NOT EXISTS idx_compliance_status ON compliance_records(status);
 CREATE INDEX IF NOT EXISTS idx_production_year ON production_stats(year, month);
+
+-- Registration & supply chain extensions
+ALTER TABLE farmers ADD COLUMN IF NOT EXISTS registered_via VARCHAR(20) DEFAULT 'web';
+ALTER TABLE farmers ADD COLUMN IF NOT EXISTS sms_alerts_enabled BOOLEAN DEFAULT true;
+
+ALTER TABLE exporters ADD COLUMN IF NOT EXISTS exporter_code VARCHAR(50);
+ALTER TABLE exporters ADD COLUMN IF NOT EXISTS email VARCHAR(255);
+ALTER TABLE exporters ADD COLUMN IF NOT EXISTS phone VARCHAR(50);
+ALTER TABLE exporters ADD COLUMN IF NOT EXISTS license_number VARCHAR(100);
+ALTER TABLE exporters ADD COLUMN IF NOT EXISTS contact_person VARCHAR(255);
+ALTER TABLE exporters ADD COLUMN IF NOT EXISTS district_id INTEGER REFERENCES districts(id);
+ALTER TABLE exporters ADD COLUMN IF NOT EXISTS commodities VARCHAR(255);
+ALTER TABLE exporters ADD COLUMN IF NOT EXISTS status VARCHAR(30) DEFAULT 'active';
+ALTER TABLE exporters ADD COLUMN IF NOT EXISTS registered_via VARCHAR(20) DEFAULT 'web';
+ALTER TABLE exporters ADD COLUMN IF NOT EXISTS registered_at TIMESTAMPTZ DEFAULT NOW();
+
+CREATE TABLE IF NOT EXISTS supply_chain_links (
+  id SERIAL PRIMARY KEY,
+  farmer_id INTEGER REFERENCES farmers(id),
+  exporter_id INTEGER REFERENCES exporters(id),
+  commodity VARCHAR(50) DEFAULT 'coffee',
+  volume_kg DECIMAL(12,2),
+  batch_code VARCHAR(50),
+  link_status VARCHAR(30) DEFAULT 'active',
+  compliance_verified BOOLEAN DEFAULT false,
+  season VARCHAR(20),
+  linked_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS channel_registrations (
+  id SERIAL PRIMARY KEY,
+  entity_type VARCHAR(20) NOT NULL,
+  entity_id INTEGER NOT NULL,
+  channel VARCHAR(20) NOT NULL,
+  phone VARCHAR(50) NOT NULL,
+  is_primary BOOLEAN DEFAULT true,
+  verified BOOLEAN DEFAULT false,
+  registered_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS training_modules (
+  id SERIAL PRIMARY KEY,
+  title VARCHAR(255) NOT NULL,
+  description TEXT,
+  category VARCHAR(50),
+  video_url VARCHAR(500),
+  duration_minutes INTEGER,
+  skill_level VARCHAR(20),
+  target_audience VARCHAR(20) DEFAULT 'farmer',
+  sort_order INTEGER DEFAULT 0,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS training_enrollments (
+  id SERIAL PRIMARY KEY,
+  farmer_id INTEGER REFERENCES farmers(id),
+  exporter_id INTEGER REFERENCES exporters(id),
+  module_id INTEGER REFERENCES training_modules(id),
+  progress_pct INTEGER DEFAULT 0,
+  completed_at TIMESTAMPTZ,
+  enrolled_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS sms_alerts (
+  id SERIAL PRIMARY KEY,
+  recipient_phone VARCHAR(50) NOT NULL,
+  recipient_type VARCHAR(20) NOT NULL,
+  farmer_id INTEGER REFERENCES farmers(id),
+  exporter_id INTEGER REFERENCES exporters(id),
+  message TEXT NOT NULL,
+  alert_type VARCHAR(50),
+  status VARCHAR(20) DEFAULT 'queued',
+  sent_at TIMESTAMPTZ,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE UNIQUE INDEX IF NOT EXISTS idx_exporters_code ON exporters(exporter_code) WHERE exporter_code IS NOT NULL;
+CREATE INDEX IF NOT EXISTS idx_supply_chain_farmer ON supply_chain_links(farmer_id);
+CREATE INDEX IF NOT EXISTS idx_supply_chain_exporter ON supply_chain_links(exporter_id);
+CREATE INDEX IF NOT EXISTS idx_sms_alerts_status ON sms_alerts(status);
 `;
 
 async function migrate() {

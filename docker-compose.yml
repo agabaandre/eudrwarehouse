@@ -15,6 +15,19 @@ services:
       timeout: 5s
       retries: 10
 
+  redis:
+    image: redis:7-alpine
+    command: redis-server --maxmemory 256mb --maxmemory-policy allkeys-lru --save 60 1000
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
   api:
     build:
       context: .
@@ -25,6 +38,7 @@ services:
       NODE_ENV: production
       PORT: 3000
       DATABASE_URL: postgresql://eudr:eudr_secret@postgres:5432/eudr
+      REDIS_URL: redis://redis:6379
       DORIS_HOST: doris-fe
       DORIS_PORT: 9030
       DORIS_USER: root
@@ -40,9 +54,12 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
+      redis:
+        condition: service_healthy
     volumes:
       - uploads_data:/app/uploads
 
 volumes:
   postgres_data:
+  redis_data:
   uploads_data:

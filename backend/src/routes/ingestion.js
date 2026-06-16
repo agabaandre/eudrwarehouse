@@ -6,6 +6,7 @@ const { parse } = require('csv-parse/sync');
 const XLSX = require('xlsx');
 const db = require('../db/postgres');
 const { authMiddleware } = require('../middleware/auth');
+const { invalidateDataCaches } = require('../services/cache');
 
 const router = express.Router();
 const uploadDir = path.join(__dirname, '../../uploads');
@@ -45,6 +46,7 @@ router.post('/csv', authMiddleware, upload.single('file'), async (req, res) => {
       ['csv', req.file.originalname, imported]
     );
     fs.unlinkSync(req.file.path);
+    await invalidateDataCaches();
     res.json({ message: 'CSV imported successfully', records_imported: imported });
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -62,6 +64,7 @@ router.post('/excel', authMiddleware, upload.single('file'), async (req, res) =>
       ['excel', req.file.originalname, imported]
     );
     fs.unlinkSync(req.file.path);
+    await invalidateDataCaches();
     res.json({ message: 'Excel imported successfully', records_imported: imported });
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -76,6 +79,7 @@ router.post('/api', authMiddleware, async (req, res) => {
       'INSERT INTO ingestion_logs (source_type, records_imported) VALUES ($1,$2)',
       ['api', imported]
     );
+    await invalidateDataCaches();
     res.json({ message: 'API data ingested successfully', records_imported: imported });
   } catch (err) {
     res.status(500).json({ error: err.message });

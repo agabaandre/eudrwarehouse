@@ -440,6 +440,7 @@ Deploy the platform on a VPS or cloud server so users can access it via the serv
 
 - Ubuntu/Debian Linux server with Docker 24+ and Docker Compose v2
 - Firewall ports open: **3000** (platform), **8088** (Superset, optional)
+- PostgreSQL stays on the internal Docker network only (not published to the host), so it will not conflict with an existing PostgreSQL on port 5432
 
 ### Manual Install
 

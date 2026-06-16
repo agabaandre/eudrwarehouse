@@ -5,9 +5,10 @@
 #   docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d --build
 
 services:
+  # No host port — API/Superset reach postgres via the Docker network (postgres:5432).
+  # Avoids conflicts when the server already runs PostgreSQL on 5432.
   postgres:
-    ports:
-      - "127.0.0.1:5432:5432"
+    ports: !reset []
 
   api:
     ports:

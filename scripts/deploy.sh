@@ -23,7 +23,7 @@ fi
 
 COMPOSE_FILES=(-f docker-compose.yml -f docker-compose.prod.yml)
 if [[ "${ENABLE_WAREHOUSE:-false}" == "true" ]]; then
-  COMPOSE_FILES+=(-f docker-compose.warehouse.yml)
+  COMPOSE_FILES+=(-f docker-compose.warehouse.yml -f docker-compose.prod.warehouse.yml)
 fi
 
 echo "Deploying to ${PUBLIC_BASE_URL}..."

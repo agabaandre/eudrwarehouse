@@ -7,7 +7,7 @@
   </defs>
   <rect width="1200" height="630" fill="url(#bg)"/>
   <text x="80" y="280" fill="#fff" font-family="system-ui,sans-serif" font-size="56" font-weight="700">MAAIF EUDR Platform</text>
-  <text x="80" y="360" fill="#d1fae5" font-family="system-ui,sans-serif" font-size="28">EU Deforestation Regulation Compliance  Uganda</text>
+  <text x="80" y="360" fill="#d1fae5" font-family="system-ui,sans-serif" font-size="28">EU Deforestation Regulation Compliance — Uganda</text>
   <circle cx="1050" cy="315" r="120" fill="none" stroke="#f4b400" stroke-width="8" opacity="0.6"/>
   <circle cx="1050" cy="315" r="80" fill="none" stroke="#fff" stroke-width="4" opacity="0.4"/>
 </svg>

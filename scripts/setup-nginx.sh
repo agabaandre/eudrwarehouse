@@ -9,10 +9,11 @@ CONF_SRC="${ROOT_DIR}/deploy/nginx/eudr-platform.conf"
 SNIPPETS_SRC="${ROOT_DIR}/deploy/nginx/snippets"
 ENV_FILE="${ROOT_DIR}/.env"
 
-API_HOST_PORT=3000
-if [[ -f "$ENV_FILE" ]] && grep -q '^API_HOST_PORT=' "$ENV_FILE" 2>/dev/null; then
-  API_HOST_PORT="$(grep '^API_HOST_PORT=' "$ENV_FILE" | cut -d= -f2-)"
-fi
+# shellcheck source=lib/production-env.sh
+source "${ROOT_DIR}/scripts/lib/production-env.sh"
+
+API_HOST_PORT="$(production_env_get API_HOST_PORT 2>/dev/null || echo 3000)"
+API_HOST_PORT="$(production_sanitize_port "$API_HOST_PORT")"
 
 if [[ "$(id -u)" -ne 0 ]]; then
   echo "Run as root: sudo $0"
@@ -35,7 +36,8 @@ mkdir -p /etc/nginx/snippets
 cp "${SNIPPETS_SRC}/"*.conf /etc/nginx/snippets/
 
 RENDERED="$(mktemp)"
-sed "s/__API_HOST_PORT__/${API_HOST_PORT}/g" "$CONF_SRC" > "$RENDERED"
+# Use | delimiter — API_HOST_PORT must be digits only (see production_sanitize_port)
+sed "s|__API_HOST_PORT__|${API_HOST_PORT}|g" "$CONF_SRC" > "$RENDERED"
 
 if [[ -d /etc/nginx/sites-available ]]; then
   cp "$RENDERED" /etc/nginx/sites-available/eudr-platform.conf

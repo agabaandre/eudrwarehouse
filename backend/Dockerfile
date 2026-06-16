@@ -20,4 +20,4 @@ RUN mkdir -p /app/uploads
 
 EXPOSE 3000
 
-CMD ["sh", "-c", "node src/scripts/migrate.js && node src/scripts/seed.js && node src/server.js"]
+CMD ["node", "src/scripts/docker-start.js"]

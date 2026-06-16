@@ -40,7 +40,7 @@ production_pick_api_host_port
 production_persist_deploy_vars
 production_load_env
 export ENABLE_WAREHOUSE="${ENABLE_WAREHOUSE:-false}"
-export API_HOST_PORT="${API_HOST_PORT:-3000}"
+export API_HOST_PORT="$(production_sanitize_port "${API_HOST_PORT:-3000}")"
 
 COMPOSE_FILES=(-f docker-compose.yml -f docker-compose.prod.yml)
 if [[ "${ENABLE_WAREHOUSE}" == "true" ]]; then
@@ -80,7 +80,11 @@ for i in $(seq 1 30); do
   if [[ "$i" -eq 30 ]]; then
     echo ""
     echo "ERROR: API is not responding on port ${API_HOST_PORT} (nginx will show 502)."
-    echo "  docker compose ${COMPOSE_FILES[*]} logs api --tail 80"
+    echo ""
+    docker compose "${COMPOSE_FILES[@]}" ps -a 2>/dev/null || true
+    echo ""
+    docker compose "${COMPOSE_FILES[@]}" logs api --tail 60 2>/dev/null || true
+    echo ""
     echo "  ss -tlnp | grep ${API_HOST_PORT}"
     exit 1
   fi

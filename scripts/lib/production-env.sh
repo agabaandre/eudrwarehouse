@@ -10,7 +10,17 @@ production_env_get() {
   local file
   file="$(production_env_file)"
   [[ -f "$file" ]] || return 1
-  grep -m1 "^${key}=" "$file" 2>/dev/null | cut -d= -f2- || return 1
+  grep -m1 "^${key}=" "$file" 2>/dev/null | cut -d= -f2- | tr -d '\r' | sed 's/^[[:space:]]*//;s/[[:space:]]*$//' || return 1
+}
+
+production_sanitize_port() {
+  local raw="${1:-3001}"
+  raw="$(echo "$raw" | grep -oE '[0-9]+' | head -1)"
+  raw="${raw:-3001}"
+  if [[ "$raw" -lt 1024 || "$raw" -gt 65535 ]]; then
+    raw=3001
+  fi
+  echo "$raw"
 }
 
 production_env_set() {
@@ -92,7 +102,14 @@ production_persist_deploy_vars() {
 
 # Pick a free localhost port for Docker → nginx (3000 is often used by Grafana)
 production_pick_api_host_port() {
-  local port saved="${API_HOST_PORT:-$(production_env_get API_HOST_PORT 2>/dev/null || true)}"
+  local port saved="${API_HOST_PORT:-}"
+  if [[ -z "$saved" ]]; then
+    saved="$(production_env_get API_HOST_PORT 2>/dev/null || true)"
+  fi
+  if [[ -n "$saved" ]]; then
+    saved="$(production_sanitize_port "$saved")"
+    production_env_set API_HOST_PORT "$saved"
+  fi
 
   if [[ -n "$saved" ]] && ! production_port_in_use "$saved"; then
     export API_HOST_PORT="$saved"
@@ -116,7 +133,9 @@ production_pick_api_host_port() {
   fi
 
   export API_HOST_PORT="$port"
-  production_env_set API_HOST_PORT "$port"
+  API_HOST_PORT="$(production_sanitize_port "$port")"
+  export API_HOST_PORT
+  production_env_set API_HOST_PORT "$API_HOST_PORT"
 }
 
 production_port_in_use() {

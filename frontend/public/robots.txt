@@ -13,3 +13,7 @@ Disallow: /superset/
 
 # Sitemap (update host after deployment)
 Sitemap: /sitemap.xml
+
+
+sudo ./scripts/deploy.sh 41.186.86.12
+sudo ./scripts/setup-nginx.sh 

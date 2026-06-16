@@ -5,13 +5,17 @@ set -euo pipefail
 # Usage: ./scripts/install.sh [SERVER_IP_OR_HOSTNAME]
 #
 # Example:
-#   ./scripts/install.sh 203.0.113.10
-#   PUBLIC_BASE_URL=http://203.0.113.10:3000 ./scripts/install.sh
+#   export ENABLE_WAREHOUSE=true
+#   ./scripts/install.sh 41.186.86.12
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$ROOT_DIR"
+# shellcheck source=lib/production-env.sh
+source "${ROOT_DIR}/scripts/lib/production-env.sh"
 
 SERVER_HOST="${1:-${SERVER_IP:-}}"
+production_load_env
+
 if [[ -z "$SERVER_HOST" ]]; then
   SERVER_HOST="$(curl -fsS --max-time 3 https://api.ipify.org 2>/dev/null || hostname -I 2>/dev/null | awk '{print $1}' || echo 'localhost')"
 fi
@@ -19,7 +23,10 @@ fi
 export PUBLIC_PORT="${PUBLIC_PORT:-8003}"
 export PUBLIC_BASE_URL="${PUBLIC_BASE_URL:-http://${SERVER_HOST}:${PUBLIC_PORT}}"
 export SUPERSET_URL="${SUPERSET_URL:-${PUBLIC_BASE_URL%/}/superset}"
-export JWT_SECRET="${JWT_SECRET:-$(openssl rand -hex 32 2>/dev/null || date +%s | shasum | awk '{print $1}')}"
+
+production_ensure_jwt_secret
+production_persist_deploy_vars
+production_load_env
 
 if ! command -v docker >/dev/null 2>&1; then
   echo "Docker is required. Install from https://docs.docker.com/engine/install/"
@@ -40,7 +47,7 @@ echo "Installing MAAIF EUDR Platform..."
 echo "  Public URL: ${PUBLIC_BASE_URL}"
 echo "  Warehouse stack: ${ENABLE_WAREHOUSE:-false}"
 
-chmod +x scripts/build-frontend.sh
+chmod +x scripts/build-frontend.sh scripts/deploy.sh scripts/setup-nginx.sh
 if command -v npm >/dev/null 2>&1; then
   ./scripts/build-frontend.sh
 else
@@ -57,9 +64,8 @@ echo "  Registration: ${PUBLIC_BASE_URL}/registration"
 echo "  Analytics:    ${PUBLIC_BASE_URL}/analytics"
 echo "  Health:       ${PUBLIC_BASE_URL}/api/health"
 if [[ "${ENABLE_WAREHOUSE:-false}" == "true" ]]; then
-  SUPERSET_URL="${PUBLIC_BASE_URL%/}/superset"
-  echo "  Superset: ${SUPERSET_URL}/"
+  echo "  Superset:     ${SUPERSET_URL}/"
 fi
 echo ""
-echo "Save JWT_SECRET for future deploys:"
-echo "  export JWT_SECRET=${JWT_SECRET}"
+echo "JWT_SECRET saved in $(production_env_file) — back up this file."
+echo "Next: sudo ./scripts/setup-nginx.sh"

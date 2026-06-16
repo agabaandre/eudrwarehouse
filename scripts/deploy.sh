@@ -66,6 +66,23 @@ fi
 docker compose "${COMPOSE_FILES[@]}" up -d --build --remove-orphans
 
 echo ""
+echo "Waiting for API health..."
+for i in $(seq 1 30); do
+  if curl -sf "http://127.0.0.1:3000/api/health" 2>/dev/null | grep -q '"status":"ok"'; then
+    echo "API is healthy on http://127.0.0.1:3000"
+    break
+  fi
+  if [[ "$i" -eq 30 ]]; then
+    echo ""
+    echo "ERROR: API is not responding on port 3000 (nginx will show 502)."
+    echo "  docker compose ${COMPOSE_FILES[*]} logs api --tail 80"
+    echo "  ss -tlnp | grep 3000"
+    exit 1
+  fi
+  sleep 2
+done
+
+echo ""
 echo "Deploy complete: ${PUBLIC_BASE_URL}"
 echo "  Home:         ${PUBLIC_BASE_URL}/"
 echo "  Management:   ${PUBLIC_BASE_URL}/management"

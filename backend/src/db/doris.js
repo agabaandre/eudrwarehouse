@@ -5,6 +5,11 @@ let pool = null;
 let available = false;
 
 async function connect() {
+  if (process.env.DORIS_SYNC_ON_START !== 'true') {
+    console.log('Apache Doris: skipped (warehouse stack not enabled)');
+    return false;
+  }
+
   try {
     pool = mysql.createPool({
       host: config.doris.host,

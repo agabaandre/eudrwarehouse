@@ -887,6 +887,7 @@ npm start            # Start API server
 | Problem | Solution |
 |---------|----------|
 | API won't start | Check `docker compose logs api`; ensure PostgreSQL is healthy |
+| 502 Bad Gateway in browser | API not on port 3000 — run `./scripts/diagnose-502.sh`. Redeploy without `PORT=8003` in `.env` (API always on 3000, nginx on 8003). |
 | Doris FE unhealthy / `dependency failed to start` | Wrong `FE_SERVERS` format or corrupted volume — run `./scripts/reset-doris.sh`, then redeploy. On Linux: `sudo sysctl -w vm.max_map_count=2000000`. Server needs **8 GB+ RAM**. First start takes **3–5 min**. |
 | Doris unavailable | Use full stack: `-f docker-compose.warehouse.yml`; wait 3–5 min |
 | Superset blank page | Wait for init; check `docker compose logs superset` |

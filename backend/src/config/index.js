@@ -38,7 +38,7 @@ module.exports = {
     adminPassword: process.env.SUPERSET_ADMIN_PASSWORD || 'admin',
   },
   warehouse: {
-    syncOnStart: process.env.DORIS_SYNC_ON_START !== 'false',
+    syncOnStart: process.env.DORIS_SYNC_ON_START === 'true',
     syncIntervalMs: parseInt(process.env.WAREHOUSE_SYNC_INTERVAL_MS || '300000', 10),
   },
   jwtSecret: process.env.JWT_SECRET || 'maaif-eudr-demo-secret',

@@ -16,7 +16,8 @@ if [[ -z "$SERVER_HOST" ]]; then
   SERVER_HOST="$(curl -fsS --max-time 3 https://api.ipify.org 2>/dev/null || hostname -I 2>/dev/null | awk '{print $1}' || echo 'localhost')"
 fi
 
-export PUBLIC_BASE_URL="${PUBLIC_BASE_URL:-http://${SERVER_HOST}:3000}"
+export PUBLIC_PORT="${PUBLIC_PORT:-3000}"
+export PUBLIC_BASE_URL="${PUBLIC_BASE_URL:-http://${SERVER_HOST}:${PUBLIC_PORT}}"
 export JWT_SECRET="${JWT_SECRET:-$(openssl rand -hex 32 2>/dev/null || date +%s | shasum | awk '{print $1}')}"
 
 if ! command -v docker >/dev/null 2>&1; then

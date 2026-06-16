@@ -15,7 +15,8 @@ if [[ -z "$SERVER_HOST" ]]; then
   SERVER_HOST="$(curl -fsS --max-time 3 https://api.ipify.org 2>/dev/null || hostname -I 2>/dev/null | awk '{print $1}' || echo 'localhost')"
 fi
 
-export PUBLIC_BASE_URL="${PUBLIC_BASE_URL:-http://${SERVER_HOST}:3000}"
+export PUBLIC_PORT="${PUBLIC_PORT:-3000}"
+export PUBLIC_BASE_URL="${PUBLIC_BASE_URL:-http://${SERVER_HOST}:${PUBLIC_PORT}}"
 
 if [[ -z "${JWT_SECRET:-}" ]]; then
   echo "Warning: JWT_SECRET is not set. Existing tokens may break if the API container is recreated."

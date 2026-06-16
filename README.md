@@ -519,6 +519,31 @@ export PUBLIC_BASE_URL=http://YOUR_SERVER_IP:3000
 
 After secrets are configured, pushes to `main` automatically run `./scripts/deploy.sh`.
 
+### Nginx reverse proxy (port 8003 → app)
+
+If your server maps **external port 8003** to **internal port 80**, nginx must proxy to the Docker API on port 3000. The default nginx welcome page means nginx is running but not configured yet.
+
+```bash
+cd /opt/eudr-platform
+git pull
+chmod +x scripts/setup-nginx.sh
+sudo ./scripts/setup-nginx.sh
+
+export PUBLIC_BASE_URL=http://YOUR_SERVER_IP:8003
+export JWT_SECRET=your-existing-secret
+./scripts/deploy.sh YOUR_SERVER_IP
+```
+
+Verify:
+
+```bash
+curl http://127.0.0.1:3000/api/health          # Docker API (on server)
+curl http://127.0.0.1/api/health               # via nginx → API
+curl http://YOUR_SERVER_IP:8003/api/health     # public URL
+```
+
+Open **http://YOUR_SERVER_IP:8003** — you should see the MAAIF EUDR landing page, not the nginx welcome screen.
+
 ---
 
 ## Development
@@ -543,9 +568,12 @@ eudr-platform/
 ├── docker-compose.warehouse.yml    # Overlay: Doris + Superset
 ├── docker-compose.prod.yml         # Production: bind API to 0.0.0.0
 ├── docker-compose.prod.warehouse.yml
+├── deploy/nginx/
+│   └── eudr-platform.conf        # Reverse proxy for port 80 → :3000
 ├── scripts/
 │   ├── install.sh                  # First-time server install
-│   └── deploy.sh                   # Update/redeploy on server
+│   ├── deploy.sh                   # Update/redeploy on server
+│   └── setup-nginx.sh              # Configure nginx reverse proxy
 ├── .github/workflows/
 │   ├── docker-build.yml            # CI: build & smoke test
 │   └── deploy.yml                  # CD: SSH deploy to server

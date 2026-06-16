@@ -55,7 +55,7 @@ production_ensure_jwt_secret() {
 }
 
 production_load_env() {
-  local file key value
+  local file line key value current
   file="$(production_env_file)"
   [[ -f "$file" ]] || return 0
 
@@ -65,8 +65,10 @@ production_load_env() {
     key="${line%%=*}"
     value="${line#*=}"
     [[ -n "$key" ]] || continue
-    # Do not override variables already set in the shell
-    if [[ -z "${!key:-}" ]]; then
+    # Portable indirect read (works on bash 3.2+; avoids ${!key})
+    current=""
+    eval "current=\${${key}-}"
+    if [[ -z "$current" ]]; then
       export "${key}=${value}"
     fi
   done < "$file"
@@ -75,6 +77,26 @@ production_load_env() {
 production_persist_deploy_vars() {
   production_env_set PUBLIC_BASE_URL "${PUBLIC_BASE_URL}"
   production_env_set SUPERSET_URL "${SUPERSET_URL}"
-  production_env_set ENABLE_WAREHOUSE "${ENABLE_WAREHOUSE:-false}"
-  [[ -n "${CLUSTER_WORKERS:-}" ]] && production_env_set CLUSTER_WORKERS "${CLUSTER_WORKERS}"
+  if [[ -n "${ENABLE_WAREHOUSE:-}" ]]; then
+    production_env_set ENABLE_WAREHOUSE "${ENABLE_WAREHOUSE}"
+  elif ! production_env_get ENABLE_WAREHOUSE >/dev/null 2>&1; then
+    production_env_set ENABLE_WAREHOUSE "false"
+  fi
+  if [[ -n "${CLUSTER_WORKERS:-}" ]]; then
+    production_env_set CLUSTER_WORKERS "${CLUSTER_WORKERS}"
+  fi
+}
+
+production_require_bash() {
+  if [[ -z "${BASH_VERSION:-}" ]]; then
+    echo "Error: run with bash: ./scripts/deploy.sh"
+    exit 1
+  fi
+}
+
+production_warn_root() {
+  if [[ "$(id -u)" -eq 0 ]]; then
+    echo "Warning: avoid sudo — run as your normal user (must be in the docker group)."
+    echo "  sudo usermod -aG docker \$USER && newgrp docker"
+  fi
 }

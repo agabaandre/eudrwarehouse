@@ -3,13 +3,20 @@ set -euo pipefail
 
 # Update and redeploy running containers.
 # Usage: ./scripts/deploy.sh [SERVER_IP_OR_HOSTNAME]
-#
-# JWT_SECRET is loaded from .env or auto-generated on first deploy.
+# Do NOT use sudo — run as a user in the docker group.
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$ROOT_DIR"
+
+if [[ ! -f "${ROOT_DIR}/scripts/lib/production-env.sh" ]]; then
+  echo "Error: scripts/lib/production-env.sh not found. Run: git pull origin main"
+  exit 1
+fi
+
 # shellcheck source=lib/production-env.sh
 source "${ROOT_DIR}/scripts/lib/production-env.sh"
+production_require_bash
+production_warn_root
 
 SERVER_HOST="${1:-${SERVER_IP:-}}"
 production_load_env
@@ -24,23 +31,36 @@ fi
 export PUBLIC_PORT="${PUBLIC_PORT:-8003}"
 export PUBLIC_BASE_URL="${PUBLIC_BASE_URL:-http://${SERVER_HOST}:${PUBLIC_PORT}}"
 export SUPERSET_URL="${SUPERSET_URL:-${PUBLIC_BASE_URL%/}/superset}"
+export ENABLE_WAREHOUSE="${ENABLE_WAREHOUSE:-$(production_env_get ENABLE_WAREHOUSE 2>/dev/null || echo false)}"
 
 production_ensure_jwt_secret
 production_persist_deploy_vars
 production_load_env
+export ENABLE_WAREHOUSE="${ENABLE_WAREHOUSE:-false}"
 
 COMPOSE_FILES=(-f docker-compose.yml -f docker-compose.prod.yml)
-if [[ "${ENABLE_WAREHOUSE:-false}" == "true" ]]; then
+if [[ "${ENABLE_WAREHOUSE}" == "true" ]]; then
   COMPOSE_FILES+=(-f docker-compose.warehouse.yml -f docker-compose.prod.warehouse.yml)
 fi
 
 echo "Deploying to ${PUBLIC_BASE_URL}..."
+echo "  Warehouse stack: ${ENABLE_WAREHOUSE}"
 
 chmod +x scripts/build-frontend.sh
 if command -v npm >/dev/null 2>&1; then
   ./scripts/build-frontend.sh
 else
   echo "npm not found — Docker will build the Vue frontend during image build"
+fi
+
+if ! command -v docker >/dev/null 2>&1; then
+  echo "Error: docker not found in PATH"
+  exit 1
+fi
+
+if ! docker compose version >/dev/null 2>&1; then
+  echo "Error: docker compose not available"
+  exit 1
 fi
 
 docker compose "${COMPOSE_FILES[@]}" up -d --build --remove-orphans

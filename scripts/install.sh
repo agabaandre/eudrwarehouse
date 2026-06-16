@@ -10,8 +10,16 @@ set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$ROOT_DIR"
+
+if [[ ! -f "${ROOT_DIR}/scripts/lib/production-env.sh" ]]; then
+  echo "Error: scripts/lib/production-env.sh not found. Run: git pull origin main"
+  exit 1
+fi
+
 # shellcheck source=lib/production-env.sh
 source "${ROOT_DIR}/scripts/lib/production-env.sh"
+production_require_bash
+production_warn_root
 
 SERVER_HOST="${1:-${SERVER_IP:-}}"
 production_load_env
@@ -23,10 +31,12 @@ fi
 export PUBLIC_PORT="${PUBLIC_PORT:-8003}"
 export PUBLIC_BASE_URL="${PUBLIC_BASE_URL:-http://${SERVER_HOST}:${PUBLIC_PORT}}"
 export SUPERSET_URL="${SUPERSET_URL:-${PUBLIC_BASE_URL%/}/superset}"
+export ENABLE_WAREHOUSE="${ENABLE_WAREHOUSE:-$(production_env_get ENABLE_WAREHOUSE 2>/dev/null || echo false)}"
 
 production_ensure_jwt_secret
 production_persist_deploy_vars
 production_load_env
+export ENABLE_WAREHOUSE="${ENABLE_WAREHOUSE:-false}"
 
 if ! command -v docker >/dev/null 2>&1; then
   echo "Docker is required. Install from https://docs.docker.com/engine/install/"

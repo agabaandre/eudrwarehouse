@@ -1,0 +1,15 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {"type":"Feature","properties":{"name":"Moroto","risk_zone":"high"},"geometry":{"type":"Polygon","coordinates":[[[34.45,2.35],[34.75,2.35],[34.75,2.65],[34.45,2.65],[34.45,2.35]]]}},
+    {"type":"Feature","properties":{"name":"Kotido","risk_zone":"high"},"geometry":{"type":"Polygon","coordinates":[[[33.85,2.85],[34.15,2.85],[34.15,3.15],[33.85,3.15],[33.85,2.85]]]}},
+    {"type":"Feature","properties":{"name":"Kaabong","risk_zone":"high"},"geometry":{"type":"Polygon","coordinates":[[[33.95,3.35],[34.25,3.35],[34.25,3.65],[33.95,3.65],[33.95,3.35]]]}},
+    {"type":"Feature","properties":{"name":"Nakapiripirit","risk_zone":"high"},"geometry":{"type":"Polygon","coordinates":[[[34.55,1.85],[34.85,1.85],[34.85,2.15],[34.55,2.15],[34.55,1.85]]]}},
+    {"type":"Feature","properties":{"name":"Amudat","risk_zone":"high"},"geometry":{"type":"Polygon","coordinates":[[[34.75,1.75],[35.05,1.75],[35.05,2.05],[34.75,2.05],[34.75,1.75]]]}},
+    {"type":"Feature","properties":{"name":"Bundibugyo","risk_zone":"medium"},"geometry":{"type":"Polygon","coordinates":[[[29.85,0.55],[30.15,0.55],[30.15,0.85],[29.85,0.85],[29.85,0.55]]]}},
+    {"type":"Feature","properties":{"name":"Soroti","risk_zone":"medium"},"geometry":{"type":"Polygon","coordinates":[[[33.45,1.55],[33.75,1.55],[33.75,1.85],[33.45,1.85],[33.45,1.55]]]}},
+    {"type":"Feature","properties":{"name":"Gulu","risk_zone":"medium"},"geometry":{"type":"Polygon","coordinates":[[[32.15,2.65],[32.45,2.65],[32.45,2.95],[32.15,2.95],[32.15,2.65]]]}},
+    {"type":"Feature","properties":{"name":"Kabale","risk_zone":"low"},"geometry":{"type":"Polygon","coordinates":[[[29.85,-1.35],[30.15,-1.35],[30.15,-1.05],[29.85,-1.05],[29.85,-1.35]]]}},
+    {"type":"Feature","properties":{"name":"Kapchorwa","risk_zone":"low"},"geometry":{"type":"Polygon","coordinates":[[[34.35,1.25],[34.65,1.25],[34.65,1.55],[34.35,1.55],[34.35,1.25]]]}}
+  ]
+}

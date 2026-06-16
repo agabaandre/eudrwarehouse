@@ -1,0 +1,47 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: eudr
+      POSTGRES_PASSWORD: eudr_secret
+      POSTGRES_DB: eudr
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U eudr -d eudr"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  api:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    ports:
+      - "3000:3000"
+    environment:
+      NODE_ENV: production
+      PORT: 3000
+      DATABASE_URL: postgresql://eudr:eudr_secret@postgres:5432/eudr
+      DORIS_HOST: doris-fe
+      DORIS_PORT: 9030
+      DORIS_USER: root
+      DORIS_PASSWORD: ""
+      JWT_SECRET: maaif-eudr-demo-secret-change-in-production
+      PUBLIC_USER_GUIDE_ENABLED: "true"
+      DORIS_SYNC_ON_START: "false"
+      SUPERSET_URL: http://localhost:8088
+      SUPERSET_PUBLIC_ENABLED: "false"
+      SUPERSET_ADMIN_USER: admin
+      SUPERSET_ADMIN_PASSWORD: admin
+    depends_on:
+      postgres:
+        condition: service_healthy
+    volumes:
+      - uploads_data:/app/uploads
+
+volumes:
+  postgres_data:
+  uploads_data:

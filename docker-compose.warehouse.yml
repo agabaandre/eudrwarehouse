@@ -1,0 +1,90 @@
+# Modern data warehouse stack: Apache Doris + Apache Superset
+# Usage: docker compose -f docker-compose.yml -f docker-compose.warehouse.yml up --build
+
+services:
+  doris-fe:
+    image: apache/doris:fe-2.1.7
+    hostname: doris-fe
+    environment:
+      - FE_SERVERS=fe1:9010
+      - FE_ID=1
+    ports:
+      - "8030:8030"
+      - "9030:9030"
+    volumes:
+      - doris_fe_data:/opt/apache-doris/fe/doris-meta
+    healthcheck:
+      test: ["CMD-SHELL", "curl -sf http://localhost:8030/api/health || exit 1"]
+      interval: 15s
+      timeout: 10s
+      retries: 25
+      start_period: 90s
+
+  doris-be:
+    image: apache/doris:be-2.1.7
+    hostname: doris-be
+    environment:
+      - FE_SERVERS=fe1:9010
+      - BE_ADDR=doris-be:9050
+    depends_on:
+      doris-fe:
+        condition: service_healthy
+    volumes:
+      - doris_be_data:/opt/apache-doris/be/storage
+    healthcheck:
+      test: ["CMD-SHELL", "curl -sf http://localhost:8040/api/health || exit 1"]
+      interval: 15s
+      timeout: 10s
+      retries: 25
+      start_period: 120s
+
+  superset:
+    build: ./superset
+    ports:
+      - "8088:8088"
+    environment:
+      SUPERSET_SECRET_KEY: maaif-eudr-superset-secret
+      SUPERSET_ADMIN_USER: admin
+      SUPERSET_ADMIN_PASSWORD: admin
+      SUPERSET_ADMIN_EMAIL: admin@superset.com
+      SUPERSET_PUBLIC_MODE: ${SUPERSET_PUBLIC_ENABLED:-false}
+      DORIS_HOST: doris-fe
+      DORIS_PORT: 9030
+      DORIS_DATABASE: eudr_analytics
+      POSTGRES_HOST: postgres
+      POSTGRES_USER: eudr
+      POSTGRES_PASSWORD: eudr_secret
+      POSTGRES_DB: eudr
+    volumes:
+      - superset_data:/app/superset_home
+    depends_on:
+      postgres:
+        condition: service_healthy
+      doris-fe:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "curl -sf http://localhost:8088/health || exit 1"]
+      interval: 20s
+      timeout: 10s
+      retries: 15
+      start_period: 120s
+
+  api:
+    environment:
+      DORIS_SYNC_ON_START: "true"
+      DORIS_HOST: doris-fe
+      SUPERSET_URL: http://localhost:8088
+      SUPERSET_PUBLIC_ENABLED: ${SUPERSET_PUBLIC_ENABLED:-false}
+      WAREHOUSE_SYNC_INTERVAL_MS: ${WAREHOUSE_SYNC_INTERVAL_MS:-300000}
+    depends_on:
+      postgres:
+        condition: service_healthy
+      doris-fe:
+        condition: service_healthy
+      superset:
+        condition: service_healthy
+
+volumes:
+  doris_fe_data:
+  doris_be_data:
+  superset_data:

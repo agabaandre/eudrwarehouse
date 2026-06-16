@@ -1,0 +1,15 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {"type":"Feature","properties":{"name":"Kabale","belt":"arabica-highland"},"geometry":{"type":"Polygon","coordinates":[[[29.85,-1.35],[30.15,-1.35],[30.15,-1.05],[29.85,-1.05],[29.85,-1.35]]]}},
+    {"type":"Feature","properties":{"name":"Kapchorwa","belt":"arabica-highland"},"geometry":{"type":"Polygon","coordinates":[[[34.35,1.25],[34.65,1.25],[34.65,1.55],[34.35,1.55],[34.35,1.25]]]}},
+    {"type":"Feature","properties":{"name":"Mbale","belt":"arabica-eastern"},"geometry":{"type":"Polygon","coordinates":[[[34.05,0.95],[34.35,0.95],[34.35,1.25],[34.05,1.25],[34.05,0.95]]]}},
+    {"type":"Feature","properties":{"name":"Kisoro","belt":"arabica-highland"},"geometry":{"type":"Polygon","coordinates":[[[29.55,-1.45],[29.85,-1.45],[29.85,-1.15],[29.55,-1.15],[29.55,-1.45]]]}},
+    {"type":"Feature","properties":{"name":"Bundibugyo","belt":"robusta-western"},"geometry":{"type":"Polygon","coordinates":[[[29.85,0.55],[30.15,0.55],[30.15,0.85],[29.85,0.85],[29.85,0.55]]]}},
+    {"type":"Feature","properties":{"name":"Masaka","belt":"robusta-central"},"geometry":{"type":"Polygon","coordinates":[[[31.55,-0.45],[31.85,-0.45],[31.85,-0.15],[31.55,-0.15],[31.55,-0.45]]]}},
+    {"type":"Feature","properties":{"name":"Mukono","belt":"robusta-central"},"geometry":{"type":"Polygon","coordinates":[[[32.55,0.25],[32.85,0.25],[32.85,0.55],[32.55,0.55],[32.55,0.25]]]}},
+    {"type":"Feature","properties":{"name":"Jinja","belt":"robusta-central"},"geometry":{"type":"Polygon","coordinates":[[[33.05,0.35],[33.35,0.35],[33.35,0.65],[33.05,0.65],[33.05,0.35]]]}},
+    {"type":"Feature","properties":{"name":"Mbarara","belt":"robusta-western"},"geometry":{"type":"Polygon","coordinates":[[[30.55,-0.75],[30.85,-0.75],[30.85,-0.45],[30.55,-0.45],[30.55,-0.75]]]}},
+    {"type":"Feature","properties":{"name":"Kasese","belt":"robusta-western"},"geometry":{"type":"Polygon","coordinates":[[[29.95,0.05],[30.25,0.05],[30.25,0.35],[29.95,0.35],[29.95,0.05]]]}}
+  ]
+}

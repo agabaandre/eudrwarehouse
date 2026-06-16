@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Analytics & Reporting Dashboard — MAAIF EUDR</title>
+  <link rel="stylesheet" href="/css/styles.css">
+  <script src="https://code.highcharts.com/highcharts.js"></script>
+  <script src="https://code.highcharts.com/modules/exporting.js"></script>
+  <script src="https://code.highcharts.com/maps/modules/map.js"></script>
+  <script src="https://code.highcharts.com/maps/modules/data.js"></script>
+</head>
+<body>
+  <header class="header">
+    <div>
+      <h1>Analytics & Reporting Dashboard</h1>
+      <div class="subtitle">MAAIF EUDR Compliance — Public View</div>
+    </div>
+    <nav>
+      <a href="/">Home</a>
+      <a href="/maps/">Geo Maps</a>
+      <a href="/management/">Management</a>
+    </nav>
+  </header>
+
+  <div class="container">
+    <div id="user-guide" class="user-guide" style="display:none">
+      <h4>User Guide</h4>
+      <p>Use filters below to build custom reports. Click district bars to drill down. Export charts using the menu on each chart.</p>
+    </div>
+
+    <div class="filter-bar">
+      <div>
+        <label>Region</label><br>
+        <select id="filter-region"><option value="">All Regions</option><option>Western</option><option>Eastern</option><option>Central</option><option>Northern</option></select>
+      </div>
+      <div>
+        <label>District</label><br>
+        <input type="text" id="filter-district" placeholder="e.g. Kabale">
+      </div>
+      <div>
+        <label>Crop</label><br>
+        <select id="filter-crop"><option value="">All</option><option value="coffee">Coffee</option><option value="cocoa">Cocoa</option></select>
+      </div>
+      <button class="btn btn-primary" id="run-report">Generate Report</button>
+    </div>
+
+    <div class="chart-grid">
+      <div class="chart-box"><h3>Monthly Production Trends (2025)</h3><div id="chart-production" style="height:300px"></div></div>
+      <div class="chart-box"><h3>District Compliance Rates</h3><div id="chart-districts" style="height:300px"></div></div>
+      <div class="chart-box"><h3>Export Destinations by Volume</h3><div id="chart-exports" style="height:300px"></div></div>
+      <div class="chart-box"><h3>Top Exporters</h3><div id="chart-exporters" style="height:300px"></div></div>
+      <div class="chart-box"><h3>Compliance Trend (2025)</h3><div id="chart-compliance-trend" style="height:300px"></div></div>
+      <div class="chart-box"><h3>Farmer Demographics — Age</h3><div id="chart-age" style="height:300px"></div></div>
+      <div class="chart-box"><h3>Risk Score by District</h3><div id="chart-risk" style="height:300px"></div></div>
+      <div class="chart-box"><h3>Uganda District Compliance Map</h3><div id="chart-map" style="height:300px"></div></div>
+    </div>
+
+    <div class="card">
+      <h3>Custom Report Results</h3>
+      <div class="table-wrap">
+        <table id="report-table">
+          <thead><tr><th>District</th><th>Region</th><th>Compliance Rate</th><th>Risk Score</th></tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <footer class="footer">MAAIF EUDR Compliance Platform — Analytics Dashboard</footer>
+  <script src="/js/common.js"></script>
+  <script src="/js/analytics.js"></script>
+</body>
+</html>

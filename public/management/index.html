@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Strategic Dashboard — MAAIF EUDR</title>
+  <link rel="stylesheet" href="/css/styles.css">
+  <script src="https://code.highcharts.com/highcharts.js"></script>
+  <script src="https://code.highcharts.com/modules/exporting.js"></script>
+  <script src="https://code.highcharts.com/maps/modules/map.js"></script>
+  <script src="https://code.highcharts.com/maps/modules/data.js"></script>
+</head>
+<body>
+  <div id="login-overlay" class="login-overlay">
+    <div class="login-box">
+      <h2>Management Login</h2>
+      <p style="color:#6b7280;margin-bottom:1rem;font-size:0.9rem">Demo: admin@admin.com / admin</p>
+      <input type="email" id="login-email" placeholder="Email" value="admin@admin.com">
+      <input type="password" id="login-password" placeholder="Password" value="admin">
+      <button class="btn btn-primary" style="width:100%" id="login-btn">Sign In</button>
+      <p id="login-error" style="color:#d93025;margin-top:0.75rem;display:none"></p>
+    </div>
+  </div>
+
+  <header class="header" id="main-header" style="display:none">
+    <div>
+      <h1>Strategic Management Dashboard</h1>
+      <div class="subtitle">MAAIF EUDR Compliance — Leadership View</div>
+    </div>
+    <nav>
+      <a href="/">Home</a>
+      <a href="/analytics/">Public Analytics</a>
+      <a href="/maps/">Geo Maps</a>
+      <a href="#" id="superset-nav" target="_blank" style="display:none">Superset BI</a>
+      <a href="#" id="logout-btn">Logout</a>
+    </nav>
+  </header>
+
+  <div class="container" id="dashboard-content" style="display:none">
+    <div class="kpi-grid" id="kpi-grid"></div>
+
+    <div class="chart-grid">
+      <div class="chart-box"><h3>EUDR Compliance Overview</h3><div id="chart-compliance-pie" style="height:300px"></div></div>
+      <div class="chart-box"><h3>Compliance Trend Over Time</h3><div id="chart-trend" style="height:300px"></div></div>
+      <div class="chart-box"><h3>Top 10 Districts — Compliance</h3><div id="chart-top-districts" style="height:300px"></div></div>
+      <div class="chart-box"><h3>Deforestation Risk Heatmap</h3><div id="chart-risk-heatmap" style="height:300px"></div></div>
+      <div class="chart-box"><h3>Production Trends by Crop</h3><div id="chart-production-crop" style="height:300px"></div></div>
+      <div class="chart-box"><h3>Regional Distribution</h3><div id="chart-regional" style="height:300px"></div></div>
+      <div class="chart-box" style="grid-column:1/-1"><h3>Geospatial Farm Locations</h3><div id="chart-farm-map" style="height:400px"></div></div>
+    </div>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.5rem">
+      <div class="card">
+        <h3>Alerts & Notifications</h3>
+        <ul class="alert-list" id="alert-list"></ul>
+      </div>
+      <div class="card">
+        <h3>Data Warehouse & Superset</h3>
+        <p style="font-size:0.9rem;color:#6b7280;margin-bottom:0.75rem" id="warehouse-status">Loading...</p>
+        <a href="#" id="superset-mgmt-link" class="btn btn-primary" target="_blank" style="display:none">Open Apache Superset</a>
+        <button class="btn btn-secondary" id="warehouse-sync-btn" style="margin-left:0.5rem">Sync Warehouse</button>
+        <p id="warehouse-sync-status" style="margin-top:0.75rem;font-size:0.85rem;color:#6b7280"></p>
+        <p id="superset-creds-mgmt" style="margin-top:0.5rem;font-size:0.85rem"></p>
+      </div>
+    </div>
+
+    <div class="card" style="margin-top:1.5rem">
+      <h3>Data Ingestion</h3>
+      <p style="font-size:0.9rem;color:#6b7280;margin-bottom:1rem">Upload CSV or Excel farmer data</p>
+      <input type="file" id="ingest-file" accept=".csv,.xlsx,.xls">
+      <button class="btn btn-primary" id="ingest-btn" style="margin-top:0.75rem">Import Data</button>
+      <p id="ingest-status" style="margin-top:0.75rem;font-size:0.9rem"></p>
+    </div>
+  </div>
+
+  <footer class="footer">MAAIF EUDR Compliance Platform — Strategic Dashboard</footer>
+  <script src="/js/common.js"></script>
+  <script src="/js/management.js"></script>
+</body>
+</html>

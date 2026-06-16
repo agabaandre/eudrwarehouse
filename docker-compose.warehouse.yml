@@ -1,42 +1,64 @@
 # Modern data warehouse stack: Apache Doris + Apache Superset
 # Usage: docker compose -f docker-compose.yml -f docker-compose.warehouse.yml up --build
+#
+# Doris requires FE_SERVERS=name:ip:port (not fe1:9010). Static IPs on doris_net.
+
+networks:
+  doris_net:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.20.80.0/24
 
 services:
   doris-fe:
-    image: apache/doris:fe-2.1.7
+    image: ${DORIS_FE_IMAGE:-apache/doris:fe-2.1.7}
     hostname: doris-fe
     environment:
-      - FE_SERVERS=fe1:9010
-      - FE_ID=1
+      FE_SERVERS: fe1:172.20.80.2:9010
+      FE_ID: 1
     ports:
       - "8030:8030"
       - "9030:9030"
     volumes:
       - doris_fe_data:/opt/apache-doris/fe/doris-meta
+    networks:
+      doris_net:
+        ipv4_address: 172.20.80.2
+      default: {}
     healthcheck:
       test: ["CMD-SHELL", "curl -sf http://localhost:8030/api/health || exit 1"]
       interval: 15s
       timeout: 10s
-      retries: 25
-      start_period: 90s
+      retries: 40
+      start_period: 180s
 
   doris-be:
-    image: apache/doris:be-2.1.7
+    image: ${DORIS_BE_IMAGE:-apache/doris:be-2.1.7}
     hostname: doris-be
     environment:
-      - FE_SERVERS=fe1:9010
-      - BE_ADDR=doris-be:9050
+      FE_SERVERS: fe1:172.20.80.2:9010
+      BE_ADDR: 172.20.80.3:9050
     depends_on:
       doris-fe:
         condition: service_healthy
     volumes:
       - doris_be_data:/opt/apache-doris/be/storage
+    networks:
+      doris_net:
+        ipv4_address: 172.20.80.3
+      default: {}
+    shm_size: 2gb
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
     healthcheck:
       test: ["CMD-SHELL", "curl -sf http://localhost:8040/api/health || exit 1"]
       interval: 15s
       timeout: 10s
-      retries: 25
-      start_period: 120s
+      retries: 40
+      start_period: 240s
 
   superset:
     build: ./superset
@@ -67,8 +89,8 @@ services:
       test: ["CMD-SHELL", "curl -sf http://localhost:8088/superset/health || exit 1"]
       interval: 20s
       timeout: 10s
-      retries: 15
-      start_period: 120s
+      retries: 20
+      start_period: 180s
 
   api:
     environment:
@@ -80,10 +102,10 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
+      redis:
+        condition: service_healthy
       doris-fe:
-        condition: service_healthy
-      superset:
-        condition: service_healthy
+        condition: service_started
 
 volumes:
   doris_fe_data:

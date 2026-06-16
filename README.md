@@ -276,6 +276,8 @@ cp .env.example .env
 | `SUPERSET_ADMIN_USER` | `admin` | Superset admin username (demo) |
 | `SUPERSET_ADMIN_PASSWORD` | `admin` | Superset admin password (demo) |
 | `PUBLIC_USER_GUIDE_ENABLED` | `true` | Show user guide on landing/analytics |
+| `PUBLIC_BASE_URL` | (empty) | External URL, e.g. `http://203.0.113.10:3000` |
+| `HOST` | `0.0.0.0` | Network interface to bind (use `0.0.0.0` for remote access) |
 | `JWT_SECRET` | (demo value) | JWT signing secret |
 
 ### Runtime Config API
@@ -430,6 +432,94 @@ Seeded automatically on first startup from the Sample Analytics and Strategic Da
 
 ---
 
+## Server Deployment (Public IP Access)
+
+Deploy the platform on a VPS or cloud server so users can access it via the server's public IP.
+
+### Prerequisites
+
+- Ubuntu/Debian Linux server with Docker 24+ and Docker Compose v2
+- Firewall ports open: **3000** (platform), **8088** (Superset, optional)
+
+### Manual Install
+
+```bash
+# On the server
+git clone <your-repo-url> /opt/eudr-platform
+cd /opt/eudr-platform
+
+# Replace with your server's public IP or hostname
+export PUBLIC_BASE_URL=http://YOUR_SERVER_IP:3000
+export JWT_SECRET=$(openssl rand -hex 32)
+
+chmod +x scripts/install.sh
+./scripts/install.sh YOUR_SERVER_IP
+```
+
+Open **http://YOUR_SERVER_IP:3000** from any browser.
+
+### Full Warehouse Stack on Server
+
+```bash
+export PUBLIC_BASE_URL=http://YOUR_SERVER_IP:3000
+export ENABLE_WAREHOUSE=true
+./scripts/install.sh YOUR_SERVER_IP
+```
+
+| Service | URL |
+|---------|-----|
+| Platform | http://YOUR_SERVER_IP:3000 |
+| Superset | http://YOUR_SERVER_IP:8088 |
+
+Superset links in the UI are generated automatically from `PUBLIC_BASE_URL`.
+
+### Update / Redeploy
+
+```bash
+cd /opt/eudr-platform
+git pull
+export PUBLIC_BASE_URL=http://YOUR_SERVER_IP:3000
+export JWT_SECRET=your-existing-secret
+./scripts/deploy.sh YOUR_SERVER_IP
+```
+
+### GitHub Actions
+
+Two workflows are included in `.github/workflows/`:
+
+| Workflow | Trigger | Purpose |
+|----------|---------|---------|
+| **Docker Build** | Push/PR to `main` | Builds images, validates compose, smoke-tests API |
+| **Deploy** | Push to `main` or manual | SSH deploy to your server |
+
+#### Required GitHub Secrets (for Deploy workflow)
+
+| Secret | Description |
+|--------|-------------|
+| `SSH_HOST` | Server public IP or hostname |
+| `SSH_USER` | SSH username (e.g. `ubuntu`) |
+| `SSH_PRIVATE_KEY` | Private key for SSH access |
+| `JWT_SECRET` | Production JWT signing secret |
+| `DEPLOY_PATH` | (optional) Install path, default `/opt/eudr-platform` |
+| `SSH_PORT` | (optional) SSH port, default `22` |
+| `ENABLE_WAREHOUSE` | (optional) `true` to deploy Doris + Superset |
+
+#### First-time server setup for GitHub Actions
+
+```bash
+# On the server — one-time bootstrap
+sudo mkdir -p /opt/eudr-platform
+sudo chown $USER:$USER /opt/eudr-platform
+git clone <your-repo-url> /opt/eudr-platform
+cd /opt/eudr-platform
+export PUBLIC_BASE_URL=http://YOUR_SERVER_IP:3000
+./scripts/install.sh YOUR_SERVER_IP
+```
+
+After secrets are configured, pushes to `main` automatically run `./scripts/deploy.sh`.
+
+---
+
 ## Development
 
 ### Local (without Docker)
@@ -450,6 +540,14 @@ npm start
 eudr-platform/
 ├── docker-compose.yml              # Base: PostgreSQL + API
 ├── docker-compose.warehouse.yml    # Overlay: Doris + Superset
+├── docker-compose.prod.yml         # Production: bind API to 0.0.0.0
+├── docker-compose.prod.warehouse.yml
+├── scripts/
+│   ├── install.sh                  # First-time server install
+│   └── deploy.sh                   # Update/redeploy on server
+├── .github/workflows/
+│   ├── docker-build.yml            # CI: build & smoke test
+│   └── deploy.yml                  # CD: SSH deploy to server
 ├── backend/
 │   ├── src/
 │   │   ├── config/                 # Environment configuration

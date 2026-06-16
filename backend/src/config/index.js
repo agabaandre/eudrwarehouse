@@ -1,7 +1,34 @@
 require('dotenv').config();
 
+function resolvePublicBaseUrl() {
+  const raw = process.env.PUBLIC_BASE_URL;
+  if (!raw) return null;
+  return raw.replace(/\/$/, '');
+}
+
+function resolveSupersetUrl(publicBaseUrl) {
+  if (process.env.SUPERSET_URL) {
+    return process.env.SUPERSET_URL.replace(/\/$/, '');
+  }
+  if (publicBaseUrl) {
+    try {
+      const url = new URL(publicBaseUrl);
+      url.port = process.env.SUPERSET_PORT || '8088';
+      url.pathname = '';
+      return url.toString().replace(/\/$/, '');
+    } catch {
+      return `http://localhost:8088`;
+    }
+  }
+  return 'http://localhost:8088';
+}
+
+const publicBaseUrl = resolvePublicBaseUrl();
+
 module.exports = {
+  host: process.env.HOST || '0.0.0.0',
   port: parseInt(process.env.PORT || '3000', 10),
+  publicBaseUrl,
   databaseUrl: process.env.DATABASE_URL || 'postgresql://eudr:eudr_secret@localhost:5432/eudr',
   doris: {
     host: process.env.DORIS_HOST || 'localhost',
@@ -11,7 +38,7 @@ module.exports = {
     database: process.env.DORIS_DATABASE || 'eudr_analytics',
   },
   superset: {
-    url: process.env.SUPERSET_URL || 'http://localhost:8088',
+    url: resolveSupersetUrl(publicBaseUrl),
     publicEnabled: process.env.SUPERSET_PUBLIC_ENABLED === 'true',
     adminUser: process.env.SUPERSET_ADMIN_USER || 'admin',
     adminPassword: process.env.SUPERSET_ADMIN_PASSWORD || 'admin',

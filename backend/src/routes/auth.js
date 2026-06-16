@@ -20,6 +20,7 @@ router.get('/config', (req, res) => {
 
   res.json({
     public_user_guide_enabled: config.publicUserGuideEnabled,
+    public_base_url: config.publicBaseUrl,
     platform: 'MAAIF EUDR Compliance Demonstration Platform',
     version: '1.1.0',
     superset,

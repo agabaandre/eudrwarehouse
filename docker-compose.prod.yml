@@ -1,0 +1,20 @@
+# Production overlay — bind the API to all interfaces for remote access.
+# Usage:
+#   export PUBLIC_BASE_URL=http://YOUR_SERVER_IP:3000
+#   export JWT_SECRET=your-secure-secret
+#   docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d --build
+
+services:
+  postgres:
+    ports:
+      - "127.0.0.1:5432:5432"
+
+  api:
+    ports:
+      - "0.0.0.0:${PORT:-3000}:3000"
+    environment:
+      HOST: 0.0.0.0
+      PUBLIC_BASE_URL: ${PUBLIC_BASE_URL:-}
+      SUPERSET_URL: ${SUPERSET_URL:-}
+      JWT_SECRET: ${JWT_SECRET:?JWT_SECRET must be set in production}
+    restart: unless-stopped

@@ -1,0 +1,23 @@
+# Production overlay for the full warehouse stack.
+# Usage:
+#   docker compose -f docker-compose.yml -f docker-compose.warehouse.yml \
+#     -f docker-compose.prod.yml -f docker-compose.prod.warehouse.yml up -d --build
+
+services:
+  doris-fe:
+    ports:
+      - "0.0.0.0:8030:8030"
+      - "0.0.0.0:9030:9030"
+    restart: unless-stopped
+
+  doris-be:
+    restart: unless-stopped
+
+  superset:
+    ports:
+      - "0.0.0.0:8088:8088"
+    restart: unless-stopped
+
+  api:
+    environment:
+      SUPERSET_URL: ${SUPERSET_URL:-}

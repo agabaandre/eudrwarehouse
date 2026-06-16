@@ -72,8 +72,8 @@ services:
   api:
     environment:
       DORIS_SYNC_ON_START: "true"
-      DORIS_HOST: doris-fe
-      SUPERSET_URL: http://localhost:8088
+      PUBLIC_BASE_URL: ${PUBLIC_BASE_URL:-}
+      SUPERSET_URL: ${SUPERSET_URL:-}
       SUPERSET_PUBLIC_ENABLED: ${SUPERSET_PUBLIC_ENABLED:-false}
       WAREHOUSE_SYNC_INTERVAL_MS: ${WAREHOUSE_SYNC_INTERVAL_MS:-300000}
     depends_on:

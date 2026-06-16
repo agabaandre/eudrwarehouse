@@ -66,8 +66,10 @@ async function start() {
       setInterval(() => syncToDoris().catch(() => {}), config.warehouse.syncIntervalMs);
     }
   }
-  app.listen(config.port, () => {
-    console.log(`MAAIF EUDR Platform running on http://localhost:${config.port}`);
+  app.listen(config.port, config.host, () => {
+    const accessUrl = config.publicBaseUrl || `http://localhost:${config.port}`;
+    console.log(`MAAIF EUDR Platform listening on ${config.host}:${config.port}`);
+    console.log(`Access URL: ${accessUrl}`);
     console.log(`Public user guide: ${config.publicUserGuideEnabled ? 'enabled' : 'disabled'}`);
     console.log(`Superset: ${config.superset.url} (public: ${config.superset.publicEnabled})`);
   });

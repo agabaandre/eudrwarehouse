@@ -1,0 +1,69 @@
+name: Deploy
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      enable_warehouse:
+        description: 'Deploy full warehouse stack (Doris + Superset)'
+        required: false
+        default: 'false'
+        type: choice
+        options:
+          - 'false'
+          - 'true'
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    if: github.event_name == 'workflow_dispatch' || (github.event_name == 'push' && github.ref == 'refs/heads/main')
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Deploy to server
+        uses: appleboy/ssh-action@v1.2.0
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          port: ${{ secrets.SSH_PORT || 22 }}
+          script_stop: true
+          envs: ENABLE_WAREHOUSE
+          script: |
+            set -euo pipefail
+
+            DEPLOY_PATH="${{ secrets.DEPLOY_PATH || '/opt/eudr-platform' }}"
+            SERVER_IP="${{ secrets.SSH_HOST }}"
+            ENABLE_WAREHOUSE="${{ github.event.inputs.enable_warehouse || secrets.ENABLE_WAREHOUSE || 'false' }}"
+
+            if [[ ! -d "$DEPLOY_PATH/.git" ]]; then
+              echo "Repository not found at $DEPLOY_PATH"
+              echo "Clone it first, then re-run this workflow."
+              exit 1
+            fi
+
+            cd "$DEPLOY_PATH"
+            git fetch origin
+            git reset --hard origin/main
+
+            export PUBLIC_BASE_URL="http://${SERVER_IP}:3000"
+            export ENABLE_WAREHOUSE
+            export JWT_SECRET="${{ secrets.JWT_SECRET }}"
+
+            chmod +x scripts/install.sh scripts/deploy.sh
+            ./scripts/deploy.sh "$SERVER_IP"
+
+      - name: Verify deployment
+        uses: appleboy/ssh-action@v1.2.0
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          port: ${{ secrets.SSH_PORT || 22 }}
+          script: |
+            sleep 10
+            curl -sf "http://127.0.0.1:3000/api/health" | grep -q '"status":"ok"'
+            echo "Health check passed on server"

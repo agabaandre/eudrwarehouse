@@ -83,7 +83,7 @@ onMounted(async () => {
     ]);
     showGuide.value = cfg.public_user_guide_enabled;
     superset.value = cfg.superset || {};
-    showSuperset.value = !!(superset.value.url && superset.value.public_enabled);
+    showSuperset.value = !!(superset.value.url && superset.value.public_enabled && superset.value.enabled !== false);
     stats.value = [
       { value: formatNumber(kpis.total_farmers), label: 'Registered Farmers' },
       { value: formatNumber(kpis.total_farm_plots), label: 'Farm Plots Mapped' },

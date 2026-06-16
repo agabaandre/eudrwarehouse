@@ -64,15 +64,15 @@ async function renderMap() {
       }));
       mapInstance = mapChart(mapEl.value, buildFarmMapOptions(points));
     } else {
-      const mapData = Highcharts.geojson(geo);
-      const valueKey = metric.value || cfg.metric;
-      mapInstance = mapChart(mapEl.value, buildChoroplethOptions(mapData, {
+      await loadUgandaMap();
+      mapInstance = mapChart(mapEl.value, buildChoroplethOptions(geo, {
+        layerId: activeLayer.value,
         min: cfg.min,
         max: cfg.max,
         minColor: cfg.colors[0],
         maxColor: cfg.colors[1],
-        valueKey,
-        seriesName: t(`maps.metrics.${valueKey}`),
+        valueKey: metric.value || cfg.metric,
+        seriesName: t(`maps.metrics.${metric.value || cfg.metric}`),
       }));
     }
   } catch (e) {
@@ -173,6 +173,6 @@ onMounted(async () => {
 <style scoped>
 .map-tabs { display: flex; gap: 0.5rem; flex-wrap: wrap; margin-bottom: 1rem; }
 .map-tab { padding: 0.5rem 1rem; border: 1px solid #e5e7eb; border-radius: 8px; background: white; cursor: pointer; font-size: 0.9rem; }
-.map-tab.active { background: #1a7f37; color: white; border-color: #1a7f37; }
+.map-tab.active { background: #0f5132; color: white; border-color: #0f5132; }
 .map-panel { min-height: 500px; }
 </style>

@@ -8,13 +8,13 @@ function resolvePublicBaseUrl() {
 
 function resolveSupersetUrl(publicBaseUrl) {
   if (process.env.SUPERSET_URL) {
-    return process.env.SUPERSET_URL.replace(/\/$/, '');
+    const url = process.env.SUPERSET_URL.replace(/\/$/, '');
+    return url.endsWith('/welcome') ? url : `${url}/welcome`;
   }
   if (publicBaseUrl) {
-    // Superset is proxied via nginx at /superset (port 8003 public, not 8088)
-    return `${publicBaseUrl.replace(/\/$/, '')}/superset`;
+    return `${publicBaseUrl.replace(/\/$/, '')}/superset/welcome`;
   }
-  return 'http://localhost:8088';
+  return 'http://localhost:8088/superset/welcome';
 }
 
 const publicBaseUrl = resolvePublicBaseUrl();
@@ -33,7 +33,9 @@ module.exports = {
   },
   superset: {
     url: resolveSupersetUrl(publicBaseUrl),
+    basePath: '/superset',
     publicEnabled: process.env.SUPERSET_PUBLIC_ENABLED === 'true',
+    warehouseRequired: process.env.ENABLE_WAREHOUSE === 'true',
     adminUser: process.env.SUPERSET_ADMIN_USER || 'admin',
     adminPassword: process.env.SUPERSET_ADMIN_PASSWORD || 'admin',
   },

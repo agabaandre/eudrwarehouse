@@ -32,7 +32,7 @@ fi
 
 export PUBLIC_PORT="${PUBLIC_PORT:-8003}"
 export PUBLIC_BASE_URL="${PUBLIC_BASE_URL:-http://${SERVER_HOST}:${PUBLIC_PORT}}"
-export SUPERSET_URL="${SUPERSET_URL:-${PUBLIC_BASE_URL%/}/superset}"
+export SUPERSET_URL="${SUPERSET_URL:-${PUBLIC_BASE_URL%/}/superset/welcome}"
 export ENABLE_WAREHOUSE="${ENABLE_WAREHOUSE:-$(production_env_get ENABLE_WAREHOUSE 2>/dev/null || echo false)}"
 
 production_ensure_jwt_secret

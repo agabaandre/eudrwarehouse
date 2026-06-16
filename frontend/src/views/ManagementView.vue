@@ -223,7 +223,7 @@ onMounted(() => {
   <template v-else>
     <AppHeader title="Strategic Management Dashboard" subtitle="MAAIF EUDR Compliance — Leadership View">
       <template #nav>
-        <a v-if="superset.url" :href="superset.url" target="_blank" rel="noopener">Superset BI</a>
+        <a v-if="superset.enabled && superset.url" :href="superset.url" target="_blank" rel="noopener noreferrer">Superset BI</a>
         <a href="#" @click.prevent="logout">Logout</a>
       </template>
     </AppHeader>
@@ -257,12 +257,20 @@ onMounted(() => {
           </ul>
         </div>
         <div class="card">
-          <h3>Data Warehouse & Superset</h3>
+          <h3>Data Warehouse &amp; Superset</h3>
           <p style="font-size:0.9rem;color:#6b7280;margin-bottom:0.75rem">{{ warehouseStatus }}</p>
-          <a v-if="superset.url" :href="superset.url" class="btn btn-primary" target="_blank" rel="noopener">Open Apache Superset</a>
-          <button class="btn btn-secondary" type="button" style="margin-left:0.5rem" @click="syncWarehouse">Sync Warehouse</button>
+          <template v-if="superset.enabled && superset.url">
+            <a :href="superset.url" class="btn btn-primary" target="_blank" rel="noopener noreferrer">Open Apache Superset</a>
+            <p style="margin-top:0.5rem;font-size:0.8rem;color:#6b7280">
+              URL: <a :href="superset.url" target="_blank" rel="noopener noreferrer">{{ superset.url }}</a>
+            </p>
+          </template>
+          <p v-else class="form-msg" style="margin-bottom:0.75rem">
+            {{ superset.note || 'Enable warehouse: ENABLE_WAREHOUSE=true ./scripts/deploy.sh then sudo ./scripts/setup-nginx.sh' }}
+          </p>
+          <button class="btn btn-secondary" type="button" style="margin-top:0.5rem" @click="syncWarehouse">Sync Warehouse</button>
           <p style="margin-top:0.75rem;font-size:0.85rem;color:#6b7280">{{ warehouseSyncStatus }}</p>
-          <p v-if="superset.admin_user" style="margin-top:0.5rem;font-size:0.85rem">
+          <p v-if="superset.admin_user && superset.enabled" style="margin-top:0.5rem;font-size:0.85rem">
             Superset login: {{ superset.admin_user }} / {{ superset.admin_password }}
           </p>
         </div>

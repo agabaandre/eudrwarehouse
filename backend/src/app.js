@@ -109,6 +109,10 @@ app.get('*', (req, res) => {
   if (req.path.startsWith('/api')) {
     return res.status(404).json({ error: 'Not found' });
   }
+  if (req.path === '/superset' || req.path.startsWith('/superset/')) {
+    const target = config.superset.url || `${config.publicBaseUrl || ''}/superset/welcome`;
+    return res.redirect(302, target);
+  }
   if (req.path.startsWith('/management')) {
     res.setHeader('X-Robots-Tag', 'noindex, nofollow, noarchive, nosnippet');
   }

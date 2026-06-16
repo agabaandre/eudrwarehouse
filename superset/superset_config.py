@@ -27,4 +27,6 @@ TALISMAN_ENABLED = False
 # Serve behind nginx at /superset/ (public port 8003)
 ENABLE_PROXY_FIX = True
 SUPERSET_WEBSERVER_BASEPATH = os.environ.get("SUPERSET_WEBSERVER_BASEPATH", "/superset/")
+APPLICATION_ROOT = "/superset/"
+SESSION_COOKIE_PATH = "/superset/"
 PREFERRED_URL_SCHEME = os.environ.get("PREFERRED_URL_SCHEME", "http")

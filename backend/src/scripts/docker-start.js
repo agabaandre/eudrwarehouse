@@ -5,6 +5,7 @@
  */
 const { migrate } = require('./migrate');
 const { seed } = require('./seed');
+const { upsertTrainingModules } = require('./upsert-training');
 
 async function main() {
   console.log('Running database migrations...');
@@ -15,6 +16,13 @@ async function main() {
     await seed();
   } catch (err) {
     console.warn('Seed skipped or partial:', err.message);
+  }
+
+  console.log('Syncing EUDR training videos...');
+  try {
+    await upsertTrainingModules();
+  } catch (err) {
+    console.warn('Training video sync skipped:', err.message);
   }
 
   console.log('Starting API server...');

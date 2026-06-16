@@ -3,7 +3,7 @@ import { nextTick, onMounted, ref } from 'vue';
 import AppHeader from '@/components/AppHeader.vue';
 import AppFooter from '@/components/AppFooter.vue';
 import { api, MONTH_NAMES } from '@/composables/api';
-import { buildChoroplethOptions, useCharts } from '@/composables/highcharts';
+import { buildChoroplethOptions, loadUgandaMap, useCharts } from '@/composables/highcharts';
 
 const { chart, mapChart, Highcharts } = useCharts();
 
@@ -140,9 +140,10 @@ async function loadCharts() {
   try {
     const geo = await api('/api/geo/layers/districts?metric=compliance_rate');
     if (geo.features?.length) {
-      const mapData = Highcharts.geojson(geo);
-      mapChart(chartMap.value, buildChoroplethOptions(mapData, {
-        min: 60, max: 100, minColor: '#fee2e2', maxColor: '#1a7f37',
+      await loadUgandaMap();
+      mapChart(chartMap.value, buildChoroplethOptions(geo, {
+        layerId: 'districts',
+        min: 60, max: 100, minColor: '#fee2e2', maxColor: '#0f5132',
         valueKey: 'compliance_rate', seriesName: 'Compliance %',
       }));
     }

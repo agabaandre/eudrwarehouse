@@ -10,14 +10,18 @@ router.post('/login', login);
 
 router.get('/config', httpCache('config', cache.TTL.config), (req, res) => {
   const superset = {
-    enabled: true,
+    enabled: config.superset.warehouseRequired,
     url: config.superset.url,
+    base_path: config.superset.basePath,
     public_enabled: config.superset.publicEnabled,
+    warehouse_required: config.superset.warehouseRequired,
     admin_user: config.superset.adminUser,
     admin_password: config.superset.adminPassword,
-    note: config.superset.publicEnabled
-      ? 'Superset link is visible on the public landing page'
-      : 'Superset link is only shown in the authenticated management dashboard',
+    note: config.superset.warehouseRequired
+      ? (config.superset.publicEnabled
+        ? 'Superset opens at /superset/welcome via nginx (port 8003)'
+        : 'Superset link is shown in the management dashboard — requires ENABLE_WAREHOUSE=true')
+      : 'Start warehouse stack: ENABLE_WAREHOUSE=true ./scripts/deploy.sh, then sudo ./scripts/setup-nginx.sh',
   };
 
   res.json({

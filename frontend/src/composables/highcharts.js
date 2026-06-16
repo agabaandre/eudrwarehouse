@@ -9,28 +9,173 @@ Highcharts.setOptions({
   chart: { style: { fontFamily: 'Segoe UI, system-ui, sans-serif' } },
 });
 
-let ugandaMapLoaded = false;
+const UG_MAP_KEY = 'countries/ug/ug-all';
 
 export function loadUgandaMap() {
-  if (Highcharts.maps?.['countries/ug/ug-all']) {
-    ugandaMapLoaded = true;
+  if (Highcharts.maps?.[UG_MAP_KEY]) {
     return Promise.resolve();
   }
   return new Promise((resolve, reject) => {
     const script = document.createElement('script');
     script.src = 'https://code.highcharts.com/mapdata/countries/ug/ug-all.js';
     script.onload = () => {
-      // Merge CDN map data into the ES-module Highcharts instance
       if (window.Highcharts?.maps) {
         Highcharts.maps = Highcharts.maps || {};
         Object.assign(Highcharts.maps, window.Highcharts.maps);
       }
-      ugandaMapLoaded = true;
       resolve();
     };
     script.onerror = reject;
     document.head.appendChild(script);
   });
+}
+
+function valueLookupFromGeo(geo, valueKey) {
+  const lookup = {};
+  (geo.features || []).forEach((f) => {
+    const name = f.properties?.name || f.properties?.district || f.properties?.region;
+    if (!name) return;
+    lookup[name] = f.properties?.[valueKey]
+      ?? f.properties?.compliance_rate
+      ?? f.properties?.risk_score
+      ?? f.properties?.production_tons
+      ?? null;
+  });
+  return lookup;
+}
+
+function ugandaBaseSeries() {
+  const ugMap = Highcharts.maps[UG_MAP_KEY];
+  if (!ugMap) return null;
+  return {
+    name: 'Uganda',
+    mapData: ugMap,
+    borderColor: '#475569',
+    borderWidth: 0.6,
+    nullColor: '#e8eef4',
+    showInLegend: false,
+    enableMouseTracking: false,
+    states: { inactive: { opacity: 1 } },
+  };
+}
+
+/** Choropleth on real Uganda district boundaries (Highcharts map collection). */
+function buildDistrictChoropleth(geo, options) {
+  const ugMap = Highcharts.maps[UG_MAP_KEY];
+  const valueKey = options.valueKey || 'compliance_rate';
+  const values = valueLookupFromGeo(geo, valueKey);
+
+  const mapData = Highcharts.geojson(ugMap, 'map');
+  mapData.forEach((point) => {
+    const name = point.name || point.properties?.name;
+    point.value = name && values[name] != null ? values[name] : null;
+  });
+
+  const series = [ugandaBaseSeries(), {
+    type: 'map',
+    name: options.seriesName,
+    data: mapData,
+    mapData: ugMap,
+    joinBy: 'hc-key',
+    nullColor: '#e8eef4',
+    borderColor: '#334155',
+    borderWidth: 0.4,
+    states: { hover: { color: '#fcdc04' } },
+    dataLabels: {
+      enabled: mapData.length <= 40,
+      format: '{point.name}',
+      style: { fontSize: '8px', textOutline: 'none', fontWeight: 'normal' },
+    },
+    tooltip: {
+      pointFormat: '<b>{point.name}</b><br/>{series.name}: <b>{point.value:.1f}</b>',
+    },
+  }].filter(Boolean);
+
+  return {
+    chart: { map: UG_MAP_KEY },
+    title: { text: null },
+    colorAxis: {
+      min: options.min,
+      max: options.max,
+      minColor: options.minColor,
+      maxColor: options.maxColor,
+    },
+    mapNavigation: { enabled: true, buttonOptions: { verticalAlign: 'bottom' } },
+    legend: { enabled: true },
+    series,
+  };
+}
+
+/** Regional / custom polygon layers drawn over Uganda country outline. */
+function buildCustomChoropleth(geo, options) {
+  const valueKey = options.valueKey || 'compliance_rate';
+  const customData = Highcharts.geojson(geo, 'map');
+  customData.forEach((p) => {
+    const props = p.properties || {};
+    p.value = props[valueKey] ?? props.compliance_rate ?? props.risk_score ?? 0;
+    if (!p.name && props.name) p.name = props.name;
+  });
+
+  const ugMap = Highcharts.maps[UG_MAP_KEY];
+  const outline = ugMap ? Highcharts.geojson(ugMap, 'mapline') : [];
+
+  const series = [];
+  if (outline.length) {
+    series.push({
+      type: 'mapline',
+      name: 'Uganda border',
+      data: outline,
+      color: '#475569',
+      lineWidth: 1.5,
+      enableMouseTracking: false,
+      showInLegend: false,
+    });
+  }
+  series.push({
+    type: 'map',
+    name: options.seriesName,
+    data: customData,
+    joinBy: 'name',
+    borderColor: '#0f5132',
+    borderWidth: 1,
+    states: { hover: { color: '#fcdc04' } },
+    dataLabels: {
+      enabled: true,
+      format: '{point.name}',
+      style: { fontSize: '11px', fontWeight: '600', textOutline: 'none' },
+    },
+    tooltip: {
+      pointFormat: '<b>{point.name}</b><br/>{series.name}: <b>{point.value:.1f}</b>',
+    },
+  });
+
+  return {
+    chart: { map: customData },
+    title: { text: null },
+    colorAxis: {
+      min: options.min,
+      max: options.max,
+      minColor: options.minColor,
+      maxColor: options.maxColor,
+    },
+    mapNavigation: { enabled: true, buttonOptions: { verticalAlign: 'bottom' } },
+    legend: { enabled: true },
+    series,
+  };
+}
+
+export function buildChoroplethOptions(geo, options = {}) {
+  if (!Highcharts.maps?.[UG_MAP_KEY]) {
+    throw new Error('Uganda map not loaded — call loadUgandaMap() first');
+  }
+
+  const layerId = options.layerId || 'districts';
+  const useDistrictMap = layerId === 'districts' || layerId === 'farm-clusters';
+
+  if (useDistrictMap) {
+    return buildDistrictChoropleth(geo, options);
+  }
+  return buildCustomChoropleth(geo, options);
 }
 
 export function buildFarmMapOptions(farmPoints) {
@@ -41,34 +186,29 @@ export function buildFarmMapOptions(farmPoints) {
       lat: p.lat,
       lon: p.lon,
       marker: {
-        fillColor: p.color || '#1a7f37',
+        fillColor: p.color || '#0f5132',
         lineColor: '#fff',
         lineWidth: 1,
         radius: 7,
       },
     }));
 
+  const series = [ugandaBaseSeries(), {
+    type: 'mappoint',
+    name: 'Farms',
+    data: points,
+    keys: ['name', 'lat', 'lon'],
+    tooltip: {
+      pointFormat: '<b>{point.name}</b><br>Lat: {point.lat:.4f}, Lon: {point.lon:.4f}',
+    },
+  }].filter(Boolean);
+
   return {
-    chart: { map: 'countries/ug/ug-all' },
+    chart: { map: UG_MAP_KEY },
     title: { text: null },
     mapNavigation: { enabled: true, buttonOptions: { verticalAlign: 'bottom' } },
     legend: { enabled: points.length > 0 },
-    series: [{
-      name: 'Uganda',
-      mapData: Highcharts.maps['countries/ug/ug-all'],
-      borderColor: '#ccc',
-      nullColor: '#f5f5f5',
-      showInLegend: false,
-      enableMouseTracking: false,
-    }, {
-      type: 'mappoint',
-      name: 'Farms',
-      data: points,
-      keys: ['name', 'lat', 'lon'],
-      tooltip: {
-        pointFormat: '<b>{point.name}</b><br>Lat: {point.lat:.4f}, Lon: {point.lon:.4f}',
-      },
-    }],
+    series,
   };
 }
 
@@ -95,35 +235,4 @@ export function useCharts() {
   });
 
   return { chart, mapChart, Highcharts };
-}
-
-export function buildChoroplethOptions(mapData, {
-  min = 60, max = 100, minColor = '#fee2e2', maxColor = '#1a7f37',
-  valueKey = 'compliance_rate', seriesName = 'Compliance %',
-  useUgandaBase = true,
-}) {
-  mapData.forEach((p) => {
-    p.value = p.properties?.[valueKey] ?? p.properties?.compliance_rate ?? 0;
-  });
-
-  const series = [{
-    data: mapData,
-    joinBy: ['name', 'name'],
-    name: seriesName,
-    states: { hover: { color: '#f4b400' } },
-    dataLabels: { enabled: true, format: '{point.properties.name}', style: { fontSize: '8px', textOutline: 'none' } },
-    tooltip: {
-      pointFormat: '<b>{point.properties.name}</b><br/>Compliance: {point.properties.compliance_rate}%<br/>Risk: {point.properties.risk_score}<br/>Production: {point.properties.production_tons} t',
-    },
-  }];
-
-  const options = {
-    chart: { map: mapData },
-    title: { text: null },
-    colorAxis: { min, max, minColor, maxColor },
-    mapNavigation: { enabled: true, buttonOptions: { verticalAlign: 'bottom' } },
-    series,
-  };
-
-  return options;
 }

@@ -15,7 +15,7 @@ services:
 
   superset:
     ports:
-      - "127.0.0.1:8088:8088"
+      - "127.0.0.1:${SUPERSET_HOST_PORT:-8088}:8088"
     restart: unless-stopped
 
   api:

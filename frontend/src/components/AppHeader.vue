@@ -2,9 +2,10 @@
 import { ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { SUPPORTED_LOCALES, setLocale } from '@/i18n';
+import GovBrandMark from '@/components/GovBrandMark.vue';
 
 defineProps({
-  title: { type: String, required: true },
+  title: { type: String, default: 'EUDR Compliance Platform' },
   subtitle: { type: String, default: '' },
   compact: { type: Boolean, default: false },
 });
@@ -30,14 +31,17 @@ function closeMenu() {
 
 <template>
   <header class="header">
+    <div class="gov-tricolor" aria-hidden="true" />
+
     <div class="header-inner">
-      <div class="header-brand">
-        <div class="header-logo" aria-hidden="true">EU</div>
-        <div>
-          <h1>{{ compact ? 'MAAIF EUDR' : title }}</h1>
-          <div v-if="subtitle && !compact" class="subtitle">{{ subtitle }}</div>
-        </div>
-      </div>
+      <router-link to="/" class="header-brand" @click="closeMenu">
+        <GovBrandMark
+          :size="compact ? 'sm' : 'md'"
+          layout="inline"
+          :platform-title="compact ? 'EUDR' : title"
+          :subtitle="subtitle && !compact ? subtitle : ''"
+        />
+      </router-link>
 
       <button
         class="nav-toggle"
@@ -66,13 +70,25 @@ function closeMenu() {
 </template>
 
 <style scoped>
+.header-brand {
+  text-decoration: none;
+  color: white;
+  min-width: 0;
+  flex: 1;
+}
+
+.header-brand:hover {
+  color: white;
+  text-decoration: none;
+}
+
 nav :deep(a) {
   color: rgba(255, 255, 255, 0.85);
 }
 
 nav :deep(a.router-link-active) {
-  background: rgba(255, 255, 255, 0.12);
-  color: white;
+  background: rgba(252, 220, 4, 0.15);
+  color: var(--ug-yellow, #fcdc04);
   font-weight: 600;
   text-decoration: none;
 }

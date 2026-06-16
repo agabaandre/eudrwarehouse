@@ -2,6 +2,7 @@
 import { onMounted, ref } from 'vue';
 import AppHeader from '@/components/AppHeader.vue';
 import AppFooter from '@/components/AppFooter.vue';
+import GovBrandMark from '@/components/GovBrandMark.vue';
 import { api, formatNumber } from '@/composables/api';
 
 const showGuide = ref(false);
@@ -97,8 +98,8 @@ onMounted(async () => {
 
 <template>
   <AppHeader
-    title="MAAIF EUDR Compliance Platform"
-    subtitle="Ministry of Agriculture, Animal Industry and Fisheries — Uganda"
+    title="EUDR Compliance Platform"
+    subtitle="EU Deforestation Regulation — National Traceability System"
   >
     <template #nav>
       <a v-if="showSuperset" :href="superset.url" target="_blank" rel="noopener noreferrer">Superset BI</a>
@@ -107,20 +108,31 @@ onMounted(async () => {
 
   <main class="container">
     <section class="hero-landing" aria-labelledby="hero-title">
-      <div class="hero-content">
-        <div class="hero-badge">
-          <span aria-hidden="true">🇺🇬</span>
-          National EUDR Compliance Platform
+      <div class="hero-layout">
+        <div class="hero-content">
+          <div class="hero-badge">
+            <span aria-hidden="true">🇺🇬</span>
+            Republic of Uganda · National EUDR Platform
+          </div>
+          <h2 id="hero-title">Trace every farm. Prove every export. Protect Uganda's forests.</h2>
+          <p class="hero-lead">
+            The MAAIF platform unifies farmer registration, supply chain traceability, geospatial risk analysis,
+            and real-time compliance analytics — built for EU Deforestation Regulation readiness at national scale.
+          </p>
+          <div class="hero-actions">
+            <router-link to="/registration" class="btn btn-primary">Start Registration</router-link>
+            <router-link to="/analytics" class="btn btn-secondary">View Analytics</router-link>
+            <router-link to="/maps" class="btn btn-secondary">Explore Maps</router-link>
+          </div>
         </div>
-        <h2 id="hero-title">Trace every farm. Prove every export. Protect Uganda's forests.</h2>
-        <p class="hero-lead">
-          The MAAIF platform unifies farmer registration, supply chain traceability, geospatial risk analysis,
-          and real-time compliance analytics — built for EU Deforestation Regulation readiness at national scale.
-        </p>
-        <div class="hero-actions">
-          <router-link to="/registration" class="btn btn-primary">Start Registration</router-link>
-          <router-link to="/analytics" class="btn btn-secondary">View Analytics</router-link>
-          <router-link to="/maps" class="btn btn-secondary">Explore Maps</router-link>
+
+        <div class="hero-crest-panel" aria-label="Government of Uganda">
+          <GovBrandMark
+            size="lg"
+            layout="stacked"
+            platform-title="EUDR Compliance Platform"
+            show-motto
+          />
         </div>
       </div>
     </section>

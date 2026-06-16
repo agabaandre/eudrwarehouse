@@ -35,10 +35,14 @@ export ENABLE_WAREHOUSE="${ENABLE_WAREHOUSE:-$(production_env_get ENABLE_WAREHOU
 
 production_ensure_jwt_secret
 production_pick_api_host_port
+if [[ "${ENABLE_WAREHOUSE:-false}" == "true" ]]; then
+  production_pick_superset_host_port
+fi
 production_persist_deploy_vars
 production_load_env
 export ENABLE_WAREHOUSE="${ENABLE_WAREHOUSE:-false}"
-export API_HOST_PORT="${API_HOST_PORT:-3000}"
+export API_HOST_PORT="$(production_sanitize_port "${API_HOST_PORT:-3000}")"
+export SUPERSET_HOST_PORT="$(production_sanitize_port "${SUPERSET_HOST_PORT:-8088}")"
 
 if ! command -v docker >/dev/null 2>&1; then
   echo "Docker is required. Install from https://docs.docker.com/engine/install/"

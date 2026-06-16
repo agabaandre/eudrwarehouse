@@ -1,31 +1,47 @@
 :root {
-  --green: #1a7f37;
-  --green-light: #22c55e;
-  --green-dark: #0d5c28;
-  --green-50: #ecfdf5;
-  --gold: #f4b400;
-  --red: #dc2626;
-  --blue: #2563eb;
-  --bg: #f8fafc;
+  /* Uganda national colours */
+  --ug-black: #000000;
+  --ug-yellow: #fcdc04;
+  --ug-red: #d90000;
+  --ug-green: #0f5132;
+  --ug-green-dark: #062e1c;
+  --ug-green-light: #198754;
+
+  --green: var(--ug-green);
+  --green-light: var(--ug-green-light);
+  --green-dark: var(--ug-green-dark);
+  --green-50: #ecfdf3;
+  --gold: var(--ug-yellow);
+  --red: var(--ug-red);
+  --blue: #1e4d8c;
+  --bg: #f4f7f5;
   --bg-elevated: #ffffff;
   --card: #ffffff;
-  --text: #0f172a;
-  --text-secondary: #334155;
-  --muted: #64748b;
-  --border: #e2e8f0;
-  --border-light: #f1f5f9;
-  --shadow-sm: 0 1px 2px rgba(15, 23, 42, 0.05);
-  --shadow: 0 4px 24px rgba(15, 23, 42, 0.08);
-  --shadow-lg: 0 20px 50px rgba(15, 23, 42, 0.12);
+  --text: #0a1f14;
+  --text-secondary: #2d4a3a;
+  --muted: #5c7368;
+  --border: #d8e5de;
+  --border-light: #ecf2ee;
+  --shadow-sm: 0 1px 2px rgba(6, 46, 28, 0.06);
+  --shadow: 0 4px 24px rgba(6, 46, 28, 0.1);
+  --shadow-lg: 0 20px 50px rgba(6, 46, 28, 0.14);
   --radius: 12px;
   --radius-lg: 20px;
   --radius-full: 9999px;
-  --header-h: 72px;
+  --header-h: 96px;
   --transition: 0.2s cubic-bezier(0.4, 0, 0.2, 1);
   --font: 'Inter', system-ui, -apple-system, sans-serif;
-  --gradient-hero: linear-gradient(135deg, #0d5c28 0%, #1a7f37 50%, #15803d 100%);
-  --gradient-mesh: radial-gradient(ellipse 80% 50% at 50% -20%, rgba(34, 197, 94, 0.15), transparent),
-    radial-gradient(ellipse 60% 40% at 100% 0%, rgba(244, 180, 0, 0.08), transparent);
+  --gradient-hero: linear-gradient(135deg, #062e1c 0%, #0f5132 42%, #134e28 100%);
+  --gradient-mesh:
+    radial-gradient(ellipse 80% 50% at 50% -20%, rgba(252, 220, 4, 0.12), transparent),
+    radial-gradient(ellipse 60% 40% at 100% 0%, rgba(217, 0, 0, 0.06), transparent);
+  --gradient-tricolor: linear-gradient(
+    90deg,
+    var(--ug-black) 33.33%,
+    var(--ug-yellow) 33.33%,
+    var(--ug-yellow) 66.66%,
+    var(--ug-red) 66.66%
+  );
 }
 
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -46,24 +62,30 @@ a:hover { color: var(--green); }
 
 img, svg { display: block; max-width: 100%; }
 
+/* ── Uganda tricolor bar ── */
+.gov-tricolor {
+  height: 4px;
+  background: var(--gradient-tricolor);
+  flex-shrink: 0;
+}
+
 /* ── Header ── */
 .header {
   position: sticky;
   top: 0;
   z-index: 100;
-  height: var(--header-h);
-  background: rgba(13, 92, 40, 0.95);
+  background: linear-gradient(180deg, var(--ug-green-dark) 0%, var(--ug-green) 100%);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-  box-shadow: var(--shadow-sm);
+  border-bottom: 2px solid rgba(252, 220, 4, 0.25);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
 }
 
 .header-inner {
   max-width: 1400px;
   margin: 0 auto;
-  padding: 0 1.5rem;
-  height: 100%;
+  padding: 0.65rem 1.5rem;
+  min-height: var(--header-h);
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -71,20 +93,6 @@ img, svg { display: block; max-width: 100%; }
 }
 
 .header-brand { display: flex; align-items: center; gap: 0.75rem; min-width: 0; }
-
-.header-logo {
-  width: 40px;
-  height: 40px;
-  border-radius: 10px;
-  background: rgba(255, 255, 255, 0.15);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-weight: 800;
-  color: white;
-  font-size: 0.75rem;
-  flex-shrink: 0;
-}
 
 .header h1 {
   font-size: 1.05rem;
@@ -119,8 +127,8 @@ img, svg { display: block; max-width: 100%; }
 
 .header nav a:hover,
 .header nav a.router-link-active {
-  background: rgba(255, 255, 255, 0.12);
-  color: white;
+  background: rgba(252, 220, 4, 0.15);
+  color: var(--ug-yellow);
   text-decoration: none;
 }
 
@@ -175,9 +183,10 @@ img, svg { display: block; max-width: 100%; }
   border-radius: var(--radius-lg);
   background: var(--gradient-hero);
   color: white;
-  padding: 4rem 2.5rem;
+  padding: 3rem 2.5rem;
   margin: 1.5rem 0 2rem;
   box-shadow: var(--shadow-lg);
+  border: 1px solid rgba(252, 220, 4, 0.15);
 }
 
 .hero-landing::before {
@@ -186,6 +195,36 @@ img, svg { display: block; max-width: 100%; }
   inset: 0;
   background: var(--gradient-mesh);
   pointer-events: none;
+}
+
+.hero-landing::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: var(--gradient-tricolor);
+  pointer-events: none;
+}
+
+.hero-layout {
+  position: relative;
+  display: grid;
+  grid-template-columns: 1.2fr 0.8fr;
+  gap: 2.5rem;
+  align-items: center;
+}
+
+.hero-crest-panel {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 1.5rem;
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: var(--radius-lg);
+  border: 1px solid rgba(252, 220, 4, 0.25);
+  backdrop-filter: blur(8px);
 }
 
 .hero-landing .hero-content {
@@ -198,12 +237,13 @@ img, svg { display: block; max-width: 100%; }
   align-items: center;
   gap: 0.5rem;
   padding: 0.35rem 0.85rem;
-  background: rgba(255, 255, 255, 0.15);
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  background: rgba(0, 0, 0, 0.25);
+  border: 1px solid rgba(252, 220, 4, 0.4);
   border-radius: var(--radius-full);
   font-size: 0.8rem;
-  font-weight: 500;
+  font-weight: 600;
   margin-bottom: 1.25rem;
+  color: var(--ug-yellow);
 }
 
 .hero-landing h2 {
@@ -289,7 +329,8 @@ img, svg { display: block; max-width: 100%; }
   width: 8px;
   height: 8px;
   border-radius: 50%;
-  background: var(--green-light);
+  background: var(--ug-yellow);
+  box-shadow: 0 0 0 2px rgba(252, 220, 4, 0.3);
 }
 
 /* ── Legacy hero (other pages) ── */
@@ -328,12 +369,17 @@ img, svg { display: block; max-width: 100%; }
 .btn:active { transform: translateY(0); }
 
 .btn-primary {
-  background: white;
-  color: var(--green-dark);
-  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.15);
+  background: var(--ug-yellow);
+  color: var(--ug-green-dark);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.2);
+  font-weight: 700;
 }
 
-.btn-primary:hover { box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2); color: var(--green-dark); }
+.btn-primary:hover {
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.25);
+  color: var(--ug-green-dark);
+  background: #ffe566;
+}
 
 .btn-secondary {
   background: rgba(255, 255, 255, 0.12);
@@ -413,9 +459,20 @@ img, svg { display: block; max-width: 100%; }
 }
 
 .card.featured {
-  border-color: var(--green);
+  position: relative;
+  overflow: hidden;
+  border-color: var(--ug-yellow);
   border-width: 2px;
   background: linear-gradient(180deg, var(--green-50) 0%, var(--card) 40%);
+}
+
+.card.featured::before {
+  content: '';
+  display: block;
+  height: 3px;
+  margin: -1.5rem -1.5rem 1rem;
+  border-radius: var(--radius) var(--radius) 0 0;
+  background: var(--gradient-tricolor);
 }
 
 .card h3 {
@@ -586,7 +643,7 @@ tr:hover td { background: var(--bg); }
 
 /* ── Footer ── */
 .footer {
-  background: var(--text);
+  background: linear-gradient(180deg, var(--ug-green-dark) 0%, #041a10 100%);
   color: rgba(255, 255, 255, 0.75);
   margin-top: 4rem;
 }
@@ -775,6 +832,19 @@ tr:hover td { background: var(--bg); }
   padding: 2.5rem;
   text-align: center;
   margin: 2.5rem 0;
+  border: 1px solid rgba(252, 220, 4, 0.2);
+  position: relative;
+  overflow: hidden;
+}
+
+.cta-band::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: var(--gradient-tricolor);
 }
 
 .cta-band h3 { font-size: 1.5rem; font-weight: 700; margin-bottom: 0.75rem; }
@@ -789,16 +859,26 @@ tr:hover td { background: var(--bg); }
   .chart-grid { grid-template-columns: 1fr; }
   .nav-toggle { display: block; }
 
+  .hero-layout {
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+  }
+
+  .hero-crest-panel {
+    order: -1;
+    padding: 1rem;
+  }
+
   .header nav {
     display: none;
     position: absolute;
-    top: var(--header-h);
+    top: calc(var(--header-h) + 4px);
     left: 0;
     right: 0;
     flex-direction: column;
-    background: var(--green-dark);
+    background: var(--ug-green-dark);
     padding: 1rem;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    border-bottom: 1px solid rgba(252, 220, 4, 0.15);
     box-shadow: var(--shadow);
   }
 
@@ -806,7 +886,7 @@ tr:hover td { background: var(--bg); }
   .header nav a { width: 100%; padding: 0.75rem 1rem; }
   .header .lang-select { width: 100%; margin-top: 0.5rem; }
 
-  .hero-landing { padding: 2.5rem 1.5rem; }
+  .hero-landing { padding: 2rem 1.25rem; }
   .stats-strip { margin-top: 0; }
   .footer-inner { grid-template-columns: 1fr; }
 }

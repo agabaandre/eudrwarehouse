@@ -1,8 +1,8 @@
 import { onMounted, onUnmounted, watch } from 'vue';
 
 const DEFAULTS = {
-  title: 'MAAIF EUDR Compliance Platform',
-  description: 'Uganda\'s national platform for EU Deforestation Regulation compliance — farmer registration, supply chain traceability, geospatial risk maps, and real-time analytics.',
+  title: 'MAAIF EUDR Platform | Ministry of Agriculture, Uganda',
+  description: 'Republic of Uganda — MAAIF platform for EU Deforestation Regulation compliance: farmer registration, supply chain traceability, geospatial maps, and export due diligence.',
   image: '/og-image.svg',
   type: 'website',
   robots: 'index, follow',
@@ -41,13 +41,13 @@ function applySeo(opts = {}) {
   document.title = title;
   upsertMeta('name', 'description', description);
   upsertMeta('name', 'robots', merged.robots);
-  upsertMeta('name', 'theme-color', '#0d5c28');
+  upsertMeta('name', 'theme-color', '#0f5132');
   upsertMeta('property', 'og:title', title);
   upsertMeta('property', 'og:description', description);
   upsertMeta('property', 'og:type', merged.type);
   upsertMeta('property', 'og:url', canonical);
   upsertMeta('property', 'og:image', merged.image.startsWith('http') ? merged.image : `${base}${merged.image}`);
-  upsertMeta('property', 'og:site_name', 'MAAIF EUDR Platform');
+  upsertMeta('property', 'og:site_name', 'MAAIF EUDR Platform — Republic of Uganda');
   upsertMeta('name', 'twitter:card', 'summary_large_image');
   upsertMeta('name', 'twitter:title', title);
   upsertMeta('name', 'twitter:description', description);

@@ -37,10 +37,14 @@ export ENABLE_WAREHOUSE="${ENABLE_WAREHOUSE:-$(production_env_get ENABLE_WAREHOU
 
 production_ensure_jwt_secret
 production_pick_api_host_port
+if [[ "${ENABLE_WAREHOUSE}" == "true" ]]; then
+  production_pick_superset_host_port
+fi
 production_persist_deploy_vars
 production_load_env
 export ENABLE_WAREHOUSE="${ENABLE_WAREHOUSE:-false}"
 export API_HOST_PORT="$(production_sanitize_port "${API_HOST_PORT:-3000}")"
+export SUPERSET_HOST_PORT="$(production_sanitize_port "${SUPERSET_HOST_PORT:-8088}")"
 
 COMPOSE_FILES=(-f docker-compose.yml -f docker-compose.prod.yml)
 if [[ "${ENABLE_WAREHOUSE}" == "true" ]]; then
@@ -50,6 +54,9 @@ fi
 echo "Deploying to ${PUBLIC_BASE_URL}..."
 echo "  Warehouse stack: ${ENABLE_WAREHOUSE}"
 echo "  API host port:   ${API_HOST_PORT} (nginx must proxy to 127.0.0.1:${API_HOST_PORT})"
+if [[ "${ENABLE_WAREHOUSE}" == "true" ]]; then
+  echo "  Superset port:   ${SUPERSET_HOST_PORT} (nginx /superset/ → 127.0.0.1:${SUPERSET_HOST_PORT})"
+fi
 
 # Do not fail deploy if a prior sudo run left root-owned scripts
 if command -v npm >/dev/null 2>&1 && [[ -f scripts/build-frontend.sh ]]; then
@@ -100,8 +107,8 @@ echo "  Superset:     ${SUPERSET_URL}/"
 echo "  Health:       ${PUBLIC_BASE_URL}/api/health"
 echo ""
 echo "JWT_SECRET is stored in $(production_env_file) — back up this file."
-if [[ "${API_HOST_PORT}" != "3000" ]]; then
+if [[ "${API_HOST_PORT}" != "3000" || "${SUPERSET_HOST_PORT}" != "8088" ]]; then
   echo ""
-  echo "API_HOST_PORT=${API_HOST_PORT} — update nginx:"
+  echo "Host ports differ from defaults — refresh nginx:"
   echo "  sudo ./scripts/setup-nginx.sh"
 fi

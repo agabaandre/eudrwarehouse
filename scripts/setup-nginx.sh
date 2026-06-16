@@ -14,6 +14,8 @@ source "${ROOT_DIR}/scripts/lib/production-env.sh"
 
 API_HOST_PORT="$(production_env_get API_HOST_PORT 2>/dev/null || echo 3000)"
 API_HOST_PORT="$(production_sanitize_port "$API_HOST_PORT")"
+SUPERSET_HOST_PORT="$(production_env_get SUPERSET_HOST_PORT 2>/dev/null || echo 8088)"
+SUPERSET_HOST_PORT="$(production_sanitize_port "$SUPERSET_HOST_PORT")"
 
 if [[ "$(id -u)" -ne 0 ]]; then
   echo "Run as root: sudo $0"
@@ -37,7 +39,7 @@ cp "${SNIPPETS_SRC}/"*.conf /etc/nginx/snippets/
 
 RENDERED="$(mktemp)"
 # Use | delimiter — API_HOST_PORT must be digits only (see production_sanitize_port)
-sed "s|__API_HOST_PORT__|${API_HOST_PORT}|g" "$CONF_SRC" > "$RENDERED"
+sed "s|__API_HOST_PORT__|${API_HOST_PORT}|g; s|__SUPERSET_HOST_PORT__|${SUPERSET_HOST_PORT}|g" "$CONF_SRC" > "$RENDERED"
 
 if [[ -d /etc/nginx/sites-available ]]; then
   cp "$RENDERED" /etc/nginx/sites-available/eudr-platform.conf
@@ -57,7 +59,9 @@ systemctl enable nginx
 systemctl reload nginx
 
 echo ""
-echo "Nginx configured (API upstream → 127.0.0.1:${API_HOST_PORT}):"
+echo "Nginx configured:"
+echo "  API upstream:      127.0.0.1:${API_HOST_PORT}"
+echo "  Superset upstream: 127.0.0.1:${SUPERSET_HOST_PORT}"
 echo "  Platform:  http://YOUR_SERVER_IP:8003/"
 echo "  Superset:  http://YOUR_SERVER_IP:8003/superset/  (requires ENABLE_WAREHOUSE=true)"
 echo ""

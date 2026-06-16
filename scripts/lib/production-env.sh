@@ -98,6 +98,9 @@ production_persist_deploy_vars() {
   if [[ -n "${API_HOST_PORT:-}" ]]; then
     production_env_set API_HOST_PORT "${API_HOST_PORT}"
   fi
+  if [[ -n "${SUPERSET_HOST_PORT:-}" ]]; then
+    production_env_set SUPERSET_HOST_PORT "${SUPERSET_HOST_PORT}"
+  fi
 }
 
 # Pick a free localhost port for Docker → nginx (3000 is often used by Grafana)
@@ -136,6 +139,40 @@ production_pick_api_host_port() {
   API_HOST_PORT="$(production_sanitize_port "$port")"
   export API_HOST_PORT
   production_env_set API_HOST_PORT "$API_HOST_PORT"
+}
+
+# Docker binds Superset on localhost; nginx proxies /superset/ here.
+production_pick_superset_host_port() {
+  local port saved="${SUPERSET_HOST_PORT:-}"
+  if [[ -z "$saved" ]]; then
+    saved="$(production_env_get SUPERSET_HOST_PORT 2>/dev/null || true)"
+  fi
+  if [[ -n "$saved" ]]; then
+    saved="$(production_sanitize_port "$saved")"
+    if ! production_port_in_use "$saved"; then
+      export SUPERSET_HOST_PORT="$saved"
+      production_env_set SUPERSET_HOST_PORT "$saved"
+      return 0
+    fi
+    echo "Port ${saved} (SUPERSET_HOST_PORT) is already in use — picking another port"
+  fi
+
+  if ! production_port_in_use 8088; then
+    port=8088
+  else
+    port=""
+    for candidate in 8089 8090 8188 8081; do
+      if ! production_port_in_use "$candidate"; then
+        port="$candidate"
+        break
+      fi
+    done
+    port="${port:-8089}"
+    echo "Port 8088 is already in use — using SUPERSET_HOST_PORT=${port}"
+  fi
+
+  export SUPERSET_HOST_PORT="$port"
+  production_env_set SUPERSET_HOST_PORT "$port"
 }
 
 production_port_in_use() {

@@ -62,8 +62,6 @@ services:
 
   superset:
     build: ./superset
-    ports:
-      - "8088:8088"
     environment:
       SUPERSET_SECRET_KEY: maaif-eudr-superset-secret
       SUPERSET_ADMIN_USER: admin

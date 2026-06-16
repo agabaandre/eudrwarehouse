@@ -151,16 +151,19 @@ async function loadDashboard() {
     ],
   });
 
-  await nextTick();
-  await loadUgandaMap();
-  const farmPoints = (farms.data || []).map((f) => ({
-    name: f.farmer_name || f.plot_code,
-    lat: parseFloat(f.latitude),
-    lon: parseFloat(f.longitude),
-    color: f.compliance_status === 'compliant' ? '#1a7f37' : f.compliance_status === 'non_compliant' ? '#d93025' : '#f4b400',
-  }));
-  if (chartFarmMap.value && Highcharts.maps['countries/ug/ug-all']) {
-    mapChart(chartFarmMap.value, buildFarmMapOptions(farmPoints));
+  if (chartFarmMap.value) {
+    try {
+      await loadUgandaMap();
+      const farmPoints = (farms.data || []).map((f) => ({
+        name: f.farmer_name || f.plot_code,
+        lat: parseFloat(f.latitude),
+        lon: parseFloat(f.longitude),
+        color: f.compliance_status === 'compliant' ? '#1a7f37' : f.compliance_status === 'non_compliant' ? '#d93025' : '#f4b400',
+      }));
+      mapChart(chartFarmMap.value, buildFarmMapOptions(farmPoints));
+    } catch (e) {
+      console.warn('Farm map load failed:', e);
+    }
   }
 
   try {

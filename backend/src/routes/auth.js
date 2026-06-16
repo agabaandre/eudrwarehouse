@@ -9,9 +9,15 @@ const router = express.Router();
 router.post('/login', login);
 
 router.get('/config', httpCache('config', cache.TTL.config), (req, res) => {
+  const supersetPath = '/superset/welcome/';
+  const supersetAbsolute = config.superset.url.startsWith('/')
+    ? null
+    : config.superset.url;
+
   const superset = {
     enabled: config.superset.warehouseRequired,
-    url: config.superset.url,
+    url: supersetPath,
+    absolute_url: supersetAbsolute,
     base_path: config.superset.basePath,
     public_enabled: config.superset.publicEnabled,
     warehouse_required: config.superset.warehouseRequired,

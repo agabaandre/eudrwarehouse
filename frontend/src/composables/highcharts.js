@@ -10,23 +10,50 @@ Highcharts.setOptions({
 });
 
 const UG_MAP_KEY = 'countries/ug/ug-all';
+const UG_MAP_SCRIPT = '/data/ug-all.js';
+const UG_MAP_CDN = 'https://code.highcharts.com/mapdata/countries/ug/ug-all.js';
+
+/** CDN mapdata scripts require global Highcharts (not available with Vite ES modules alone). */
+function exposeHighchartsGlobal() {
+  window.Highcharts = Highcharts;
+}
+
+let ugandaMapPromise = null;
+
+function loadMapScript(src) {
+  return new Promise((resolve, reject) => {
+    exposeHighchartsGlobal();
+    const script = document.createElement('script');
+    script.src = src;
+    script.onload = () => {
+      if (window.Highcharts?.maps?.[UG_MAP_KEY]) {
+        Highcharts.maps = Highcharts.maps || {};
+        Highcharts.maps[UG_MAP_KEY] = window.Highcharts.maps[UG_MAP_KEY];
+      }
+      if (Highcharts.maps?.[UG_MAP_KEY]) {
+        resolve();
+      } else {
+        reject(new Error(`Map key ${UG_MAP_KEY} missing after loading ${src}`));
+      }
+    };
+    script.onerror = () => reject(new Error(`Failed to load map script: ${src}`));
+    document.head.appendChild(script);
+  });
+}
 
 export function loadUgandaMap() {
   if (Highcharts.maps?.[UG_MAP_KEY]) {
     return Promise.resolve();
   }
-  return new Promise((resolve, reject) => {
-    const script = document.createElement('script');
-    script.src = 'https://code.highcharts.com/mapdata/countries/ug/ug-all.js';
-    script.onload = () => {
-      if (window.Highcharts?.maps) {
-        Highcharts.maps = Highcharts.maps || {};
-        Object.assign(Highcharts.maps, window.Highcharts.maps);
-      }
-      resolve();
-    };
-    script.onerror = reject;
-    document.head.appendChild(script);
+  if (ugandaMapPromise) {
+    return ugandaMapPromise;
+  }
+
+  ugandaMapPromise = loadMapScript(UG_MAP_SCRIPT).catch(() => loadMapScript(UG_MAP_CDN));
+
+  return ugandaMapPromise.catch((err) => {
+    ugandaMapPromise = null;
+    throw err;
   });
 }
 
@@ -234,5 +261,5 @@ export function useCharts() {
     instances.length = 0;
   });
 
-  return { chart, mapChart, Highcharts };
+  return { chart, mapChart, Highcharts, loadUgandaMap };
 }

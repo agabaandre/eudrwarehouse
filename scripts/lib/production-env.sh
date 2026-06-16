@@ -85,7 +85,13 @@ production_load_env() {
 }
 
 production_persist_deploy_vars() {
-  production_env_set PUBLIC_BASE_URL "${PUBLIC_BASE_URL}"
+  if [[ -n "${PUBLIC_BASE_URL:-}" ]]; then
+    local cleaned="${PUBLIC_BASE_URL}"
+    cleaned="${cleaned%/}"
+    cleaned="${cleaned%/superset}"
+    cleaned="${cleaned%/superset/welcome}"
+    production_env_set PUBLIC_BASE_URL "$cleaned"
+  fi
   production_env_set SUPERSET_URL "${SUPERSET_URL}"
   if [[ -n "${ENABLE_WAREHOUSE:-}" ]]; then
     production_env_set ENABLE_WAREHOUSE "${ENABLE_WAREHOUSE}"

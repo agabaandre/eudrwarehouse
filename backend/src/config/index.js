@@ -3,18 +3,39 @@ require('dotenv').config();
 function resolvePublicBaseUrl() {
   const raw = process.env.PUBLIC_BASE_URL;
   if (!raw) return null;
-  return raw.replace(/\/$/, '');
+  return normalizePublicBaseUrl(raw);
+}
+
+function normalizePublicBaseUrl(raw) {
+  if (!raw) return null;
+  let url = raw.replace(/\/$/, '');
+  // Fix mistaken PUBLIC_BASE_URL=http://host:8003/superset
+  url = url.replace(/\/superset(\/welcome)?$/i, '');
+  return url;
 }
 
 function resolveSupersetUrl(publicBaseUrl) {
-  if (process.env.SUPERSET_URL) {
-    const url = process.env.SUPERSET_URL.replace(/\/$/, '');
-    return url.endsWith('/welcome') ? url : `${url}/welcome`;
+  const base = normalizePublicBaseUrl(publicBaseUrl);
+  const envRaw = process.env.SUPERSET_URL?.trim();
+
+  if (envRaw) {
+    let url = envRaw.replace(/\/$/, '');
+    // Collapse accidental double /superset paths
+    url = url.replace(/(\/superset){2,}/gi, '/superset');
+    // If env is a full URL, use it; otherwise treat as path
+    if (/^https?:\/\//i.test(url)) {
+      if (!/\/superset/i.test(url)) {
+        url = `${base || url.replace(/\/[^/]*$/, '')}/superset`;
+      }
+      return url.endsWith('/welcome') ? url : `${url.replace(/\/welcome$/, '')}/welcome`;
+    }
+    return '/superset/welcome/';
   }
-  if (publicBaseUrl) {
-    return `${publicBaseUrl.replace(/\/$/, '')}/superset/welcome`;
+
+  if (base) {
+    return `${base}/superset/welcome`;
   }
-  return 'http://localhost:8088/superset/welcome';
+  return '/superset/welcome/';
 }
 
 const publicBaseUrl = resolvePublicBaseUrl();

@@ -4,6 +4,7 @@ import { useI18n } from 'vue-i18n';
 import { SUPPORTED_LOCALES, setLocale } from '@/i18n';
 import { useAssistantModal } from '@/composables/useAssistantModal';
 import GovBrandMark from '@/components/GovBrandMark.vue';
+import OfficerNavLinks from '@/components/OfficerNavLinks.vue';
 
 defineProps({
   title: { type: String, default: 'EUDR Compliance Platform' },
@@ -73,6 +74,7 @@ function openAssistantModal() {
         <select class="lang-select" :value="locale" :aria-label="t('common.language')" @change="onLocaleChange">
           <option v-for="loc in SUPPORTED_LOCALES" :key="loc.code" :value="loc.code">{{ loc.label }}</option>
         </select>
+        <OfficerNavLinks />
         <slot name="nav" />
       </nav>
     </div>

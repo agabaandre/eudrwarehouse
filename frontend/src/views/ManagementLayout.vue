@@ -1,18 +1,21 @@
 <script setup>
 import { onMounted, provide, ref } from 'vue';
-import { RouterLink, RouterView, useRoute } from 'vue-router';
+import { RouterView } from 'vue-router';
 import AppHeader from '@/components/AppHeader.vue';
 import AppFooter from '@/components/AppFooter.vue';
 import { api } from '@/composables/api';
-import { clearManagementSession, ensureManagementSession, getManagementToken } from '@/composables/managementAuth';
+import {
+  clearManagementSession,
+  ensureManagementSession,
+  setManagementToken,
+  useManagementSession,
+} from '@/composables/managementAuth';
 
-const route = useRoute();
-const isLoggedIn = ref(!!getManagementToken());
+const { isLoggedIn } = useManagementSession();
 const loginEmail = ref('admin@admin.com');
 const loginPassword = ref('admin');
 const loginError = ref('');
 const sessionNotice = ref('');
-const superset = ref({});
 
 async function login() {
   loginError.value = '';
@@ -30,22 +33,14 @@ async function login() {
     if (!data.token) {
       throw new Error('Sign in failed — no session token returned.');
     }
-    localStorage.setItem('eudr_token', data.token);
-    isLoggedIn.value = true;
+    setManagementToken(data.token);
   } catch (e) {
     loginError.value = e.message || 'Login failed. Use admin@admin.com / admin';
   }
 }
 
-function logout() {
-  clearManagementSession();
-  isLoggedIn.value = false;
-  sessionNotice.value = '';
-}
-
 function handleAuthError(message) {
   clearManagementSession();
-  isLoggedIn.value = false;
   sessionNotice.value = message || 'Your session expired. Please sign in again to save settings.';
 }
 
@@ -53,10 +48,9 @@ provide('managementAuth', { handleAuthError, ensureSession: ensureManagementSess
 
 onMounted(async () => {
   try {
-    const cfg = await api('/api/auth/config');
-    superset.value = cfg.superset || {};
+    await api('/api/auth/config');
   } catch {
-    /* optional */
+    /* optional warm-up */
   }
   if (isLoggedIn.value) {
     try {
@@ -82,18 +76,7 @@ onMounted(async () => {
   </div>
 
   <template v-else>
-    <AppHeader title="Strategic Management" subtitle="MAAIF EUDR Compliance — Leadership &amp; Administration">
-      <template #nav>
-        <RouterLink to="/management" class="mgmt-nav-link" :class="{ active: route.name === 'management' }">
-          Dashboard
-        </RouterLink>
-        <RouterLink to="/management/configuration" class="mgmt-nav-link" :class="{ active: route.name === 'management-configuration' }">
-          Configuration
-        </RouterLink>
-        <a v-if="superset.enabled && superset.url" :href="superset.url" target="_blank" rel="noopener noreferrer">Superset BI</a>
-        <a href="#" @click.prevent="logout">Logout</a>
-      </template>
-    </AppHeader>
+    <AppHeader title="Strategic Management" subtitle="MAAIF EUDR Compliance — Leadership &amp; Administration" />
 
     <RouterView />
 
@@ -102,19 +85,6 @@ onMounted(async () => {
 </template>
 
 <style scoped>
-.mgmt-nav-link {
-  color: rgba(255, 255, 255, 0.88);
-  font-weight: 600;
-  padding: 0.35rem 0.65rem;
-  border-radius: 8px;
-  border: 1px solid transparent;
-}
-.mgmt-nav-link:hover { color: #fff; background: rgba(255, 255, 255, 0.08); }
-.mgmt-nav-link.active {
-  color: #062e1c;
-  background: var(--ug-yellow);
-  border-color: rgba(252, 220, 4, 0.5);
-}
 .login-notice {
   color: #9a3412;
   background: #fff7ed;

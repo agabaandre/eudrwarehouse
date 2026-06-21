@@ -1,3 +1,5 @@
+import { clearManagementSession } from '@/composables/managementAuth';
+
 export function formatNumber(n) {
   const num = Number(n);
   if (Number.isNaN(num)) return n;
@@ -29,7 +31,7 @@ export async function apiAuth(path, options = {}) {
   if (!res.ok) {
     const err = await res.json().catch(() => ({}));
     if (res.status === 401) {
-      localStorage.removeItem('eudr_token');
+      clearManagementSession();
     }
     throw new Error(err.error || `API error: ${res.status}`);
   }

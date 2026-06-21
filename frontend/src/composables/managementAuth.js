@@ -1,3 +1,5 @@
+import { computed, ref } from 'vue';
+
 export class ManagementAuthError extends Error {
   constructor(message) {
     super(message);
@@ -6,12 +8,36 @@ export class ManagementAuthError extends Error {
   }
 }
 
+const sessionTick = ref(0);
+
+export function touchManagementSession() {
+  sessionTick.value += 1;
+}
+
 export function getManagementToken() {
   return localStorage.getItem('eudr_token');
 }
 
+export function setManagementToken(token) {
+  if (token) {
+    localStorage.setItem('eudr_token', token);
+  } else {
+    localStorage.removeItem('eudr_token');
+  }
+  touchManagementSession();
+}
+
 export function clearManagementSession() {
-  localStorage.removeItem('eudr_token');
+  setManagementToken(null);
+}
+
+export function useManagementSession() {
+  const isLoggedIn = computed(() => {
+    sessionTick.value;
+    return !!getManagementToken();
+  });
+
+  return { isLoggedIn };
 }
 
 export async function ensureManagementSession() {

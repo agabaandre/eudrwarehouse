@@ -108,15 +108,21 @@ function buildDistrictChoropleth(geo, options) {
     name: options.seriesName,
     data: mapData,
     mapData: ugMap,
-    joinBy: 'hc-key',
     nullColor: '#e8eef4',
     borderColor: '#334155',
     borderWidth: 0.4,
     states: { hover: { color: '#fcdc04' } },
+    joinBy: 'name',
     dataLabels: {
-      enabled: mapData.length <= 40,
+      enabled: options.showDistrictLabels !== false,
       format: '{point.name}',
-      style: { fontSize: '8px', textOutline: 'none', fontWeight: 'normal' },
+      allowOverlap: true,
+      style: {
+        fontSize: '8px',
+        fontWeight: '600',
+        color: '#062e1c',
+        textOutline: '1px contrast',
+      },
     },
     tooltip: {
       pointFormat: '<b>{point.name}</b><br/>{series.name}: <b>{point.value:.1f}</b>',
@@ -172,9 +178,10 @@ function buildCustomChoropleth(geo, options) {
     borderWidth: 1,
     states: { hover: { color: '#fcdc04' } },
     dataLabels: {
-      enabled: true,
+      enabled: options.showDistrictLabels !== false,
       format: '{point.name}',
-      style: { fontSize: '11px', fontWeight: '600', textOutline: 'none' },
+      allowOverlap: true,
+      style: { fontSize: '11px', fontWeight: '600', color: '#062e1c', textOutline: '1px contrast' },
     },
     tooltip: {
       pointFormat: '<b>{point.name}</b><br/>{series.name}: <b>{point.value:.1f}</b>',

@@ -286,6 +286,10 @@ SUPERSET_PUBLIC_ENABLED=true
 
 ## Architecture
 
+![MAAIF EUDR Data Warehouse Architecture](./data-warehouse-architecture.png)
+
+> Vector source: [`data-warehouse-architecture.svg`](./data-warehouse-architecture.svg) · PNG: [`data-warehouse-architecture.png`](./data-warehouse-architecture.png)
+
 ### Data Flow
 
 ```

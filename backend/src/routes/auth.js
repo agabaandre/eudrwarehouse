@@ -44,6 +44,10 @@ router.get('/config', httpCache('config', cache.TTL.config), (req, res) => {
       sync_interval_ms: config.warehouse.syncIntervalMs,
     },
     geo_layers: ['/api/geo/layers'],
+    google_maps: {
+      api_key: config.googleMaps.apiKey,
+      enabled: !!config.googleMaps.apiKey,
+    },
     registration: {
       hub_url: '/registration',
       farmer_register: 'POST /api/registration/farmer',

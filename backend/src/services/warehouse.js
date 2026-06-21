@@ -281,7 +281,7 @@ async function getWarehouseStatus() {
     tables = rows ? rows.map((r) => Object.values(r)[0]) : [];
   }
   return {
-    architecture: 'PostgreSQL (OLTP) → ETL → Apache Doris (OLAP star schema) → Apache Superset (BI)',
+    architecture: 'PostgreSQL (OLTP) → ETL → Apache Doris (OLAP star schema) → React dashboards + Apache Superset (BI)',
     postgresql: 'connected',
     apache_doris: dorisUp ? 'connected' : 'unavailable',
     apache_superset: config.superset.url,

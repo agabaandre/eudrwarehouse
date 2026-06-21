@@ -145,6 +145,7 @@ async function loadCharts() {
         layerId: 'districts',
         min: 60, max: 100, minColor: '#fee2e2', maxColor: '#0f5132',
         valueKey: 'compliance_rate', seriesName: 'Compliance %',
+        showDistrictLabels: true,
       }));
     }
   } catch (e) {

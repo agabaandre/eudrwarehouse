@@ -94,6 +94,9 @@ module.exports = {
       },
     },
   },
+  googleMaps: {
+    apiKey: process.env.GOOGLE_MAPS_API_KEY || process.env.VITE_GOOGLE_MAPS_API_KEY || '',
+  },
   redis: {
     enabled: process.env.REDIS_ENABLED !== 'false' && !!(process.env.REDIS_URL || process.env.REDIS_HOST),
     url: process.env.REDIS_URL || (

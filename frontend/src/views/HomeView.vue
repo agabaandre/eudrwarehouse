@@ -145,15 +145,6 @@ onMounted(async () => {
       </div>
     </section>
 
-    <div class="trust-bar" role="list" aria-label="Platform capabilities">
-      <div class="trust-item" role="listitem"><span class="trust-dot" /> EUDR-ready traceability</div>
-      <div class="trust-item" role="listitem"><span class="trust-dot" /> AI compliance assistant</div>
-      <div class="trust-item" role="listitem"><span class="trust-dot" /> USSD *284# field access</div>
-      <div class="trust-item" role="listitem"><span class="trust-dot" /> 7 local languages</div>
-    </div>
-
-    <ComplianceAssistant />
-
     <section aria-labelledby="features-title">
       <h2 id="features-title" class="section-title">Everything you need for EUDR compliance</h2>
       <p class="section-subtitle">
@@ -185,6 +176,15 @@ onMounted(async () => {
         </article>
       </div>
     </section>
+
+    <div class="trust-bar" role="list" aria-label="Platform capabilities">
+      <div class="trust-item" role="listitem"><span class="trust-dot" /> EUDR-ready traceability</div>
+      <div class="trust-item" role="listitem"><span class="trust-dot" /> AI compliance assistant</div>
+      <div class="trust-item" role="listitem"><span class="trust-dot" /> USSD *284# field access</div>
+      <div class="trust-item" role="listitem"><span class="trust-dot" /> 7 local languages</div>
+    </div>
+
+    <ComplianceAssistant />
 
     <section class="cta-band" aria-labelledby="cta-title">
       <h3 id="cta-title">Ready to demonstrate EUDR compliance?</h3>

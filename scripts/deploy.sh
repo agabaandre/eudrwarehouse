@@ -32,7 +32,7 @@ fi
 
 export PUBLIC_PORT="${PUBLIC_PORT:-8003}"
 export PUBLIC_BASE_URL="${PUBLIC_BASE_URL:-http://${SERVER_HOST}:${PUBLIC_PORT}}"
-export SUPERSET_URL="${SUPERSET_URL:-/superset/welcome/}"
+export SUPERSET_URL="${SUPERSET_URL:-/superset/login/}"
 export ENABLE_WAREHOUSE="${ENABLE_WAREHOUSE:-$(production_env_get ENABLE_WAREHOUSE 2>/dev/null || echo false)}"
 
 production_ensure_jwt_secret
@@ -103,7 +103,7 @@ echo "Deploy complete: ${PUBLIC_BASE_URL}"
 echo "  Home:         ${PUBLIC_BASE_URL}/"
 echo "  Management:   ${PUBLIC_BASE_URL}/management"
 echo "  Registration: ${PUBLIC_BASE_URL}/registration"
-echo "  Superset:     ${PUBLIC_BASE_URL:-http://YOUR_IP:8003}/superset/welcome/"
+echo "  Superset:     ${PUBLIC_BASE_URL:-http://YOUR_IP:8003}/superset/login/"
 echo "  Health:       ${PUBLIC_BASE_URL}/api/health"
 echo ""
 echo "JWT_SECRET is stored in $(production_env_file) — back up this file."

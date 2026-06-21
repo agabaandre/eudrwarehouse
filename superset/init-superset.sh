@@ -16,11 +16,12 @@ superset init
 
 python /app/setup_connections.py
 
-echo "Starting Superset on port 8088..."
+echo "Starting Superset on port 8088 (basepath ${SUPERSET_WEBSERVER_BASEPATH:-/superset})..."
 exec gunicorn \
   --bind "0.0.0.0:8088" \
   --workers 2 \
   --worker-class gthread \
   --threads 4 \
   --timeout 120 \
+  --forwarded-allow-ips='*' \
   "superset.app:create_app()"

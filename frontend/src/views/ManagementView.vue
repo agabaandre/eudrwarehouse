@@ -2,6 +2,7 @@
 import { nextTick, onMounted, ref } from 'vue';
 import AppHeader from '@/components/AppHeader.vue';
 import AppFooter from '@/components/AppFooter.vue';
+import ManagementAiConfig from '@/components/ManagementAiConfig.vue';
 import { api, apiAuth, formatNumber, MONTH_NAMES } from '@/composables/api';
 import { loadUgandaMap, useCharts, buildFarmMapOptions } from '@/composables/highcharts';
 
@@ -158,6 +159,9 @@ async function loadDashboard() {
         name: f.farmer_name || f.plot_code,
         lat: parseFloat(f.latitude),
         lon: parseFloat(f.longitude),
+        district: f.district,
+        status: f.compliance_status,
+        commodity: f.commodity,
         color: f.compliance_status === 'compliant' ? '#1a7f37' : f.compliance_status === 'non_compliant' ? '#d93025' : '#f4b400',
       }));
       mapChart(chartFarmMap.value, buildFarmMapOptions(farmPoints));
@@ -278,6 +282,8 @@ onMounted(() => {
           </p>
         </div>
       </div>
+
+      <ManagementAiConfig />
 
       <div class="card" style="margin-top:1.5rem">
         <h3>Data Ingestion</h3>

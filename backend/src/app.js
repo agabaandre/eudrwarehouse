@@ -24,10 +24,11 @@ const supplyChainRoutes = require('./routes/supplyChain');
 const trainingRoutes = require('./routes/training');
 const channelsRoutes = require('./routes/channels');
 const alertsRoutes = require('./routes/alerts');
+const assistantRoutes = require('./routes/assistant');
 const sitemapRoutes = require('./routes/sitemap');
 
 const app = express();
-const { apiLimiter, authLimiter, ingestLimiter } = createRateLimiters();
+const { apiLimiter, authLimiter, ingestLimiter, assistantLimiter } = createRateLimiters();
 
 app.use(compression());
 app.use(securityHeaders);
@@ -39,6 +40,7 @@ app.use(sitemapRoutes);
 
 app.use('/api/auth/login', authLimiter);
 app.use('/api/ingestion', ingestLimiter);
+app.use('/api/assistant/chat', assistantLimiter);
 app.use('/api', apiLimiter);
 
 app.use('/api/analytics', httpCache('analytics', cacheService.TTL.analytics));
@@ -66,6 +68,7 @@ app.use('/api/supply-chain', supplyChainRoutes);
 app.use('/api/training', trainingRoutes);
 app.use('/api/channels', channelsRoutes);
 app.use('/api/alerts', alertsRoutes);
+app.use('/api/assistant', assistantRoutes);
 
 app.get('/api/health', async (req, res) => {
   res.json({
@@ -110,7 +113,7 @@ app.get('*', (req, res) => {
     return res.status(404).json({ error: 'Not found' });
   }
   if (req.path === '/superset' || req.path.startsWith('/superset/')) {
-    return res.redirect(302, '/superset/welcome/');
+    return res.redirect(302, '/superset/login/');
   }
   if (req.path.startsWith('/management')) {
     res.setHeader('X-Robots-Tag', 'noindex, nofollow, noarchive, nosnippet');

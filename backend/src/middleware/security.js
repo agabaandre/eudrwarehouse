@@ -55,7 +55,14 @@ function createRateLimiters() {
     store: redisRateLimitStore('ingest'),
   });
 
-  return { apiLimiter, authLimiter, ingestLimiter };
+  const assistantLimiter = rateLimit({
+    windowMs: 60 * 1000,
+    max: parseInt(process.env.RATE_LIMIT_ASSISTANT_MAX || '30', 10),
+    message: { error: 'Assistant rate limit exceeded. Please wait a moment.' },
+    store: redisRateLimitStore('assistant'),
+  });
+
+  return { apiLimiter, authLimiter, ingestLimiter, assistantLimiter };
 }
 
 module.exports = {

@@ -20,22 +20,22 @@ function resolveSupersetUrl(publicBaseUrl) {
 
   if (envRaw) {
     let url = envRaw.replace(/\/$/, '');
-    // Collapse accidental double /superset paths
     url = url.replace(/(\/superset){2,}/gi, '/superset');
-    // If env is a full URL, use it; otherwise treat as path
     if (/^https?:\/\//i.test(url)) {
       if (!/\/superset/i.test(url)) {
         url = `${base || url.replace(/\/[^/]*$/, '')}/superset`;
       }
-      return url.endsWith('/welcome') ? url : `${url.replace(/\/welcome$/, '')}/welcome`;
+      if (!/\/login/i.test(url) && !/\/welcome/i.test(url)) {
+        url = `${url}/login`;
+      }
+      return url;
     }
-    return '/superset/welcome/';
+    return url.startsWith('/') ? `${url}/` : `/${url}/`;
   }
-
   if (base) {
-    return `${base}/superset/welcome`;
+    return `${base}/superset/login`;
   }
-  return '/superset/welcome/';
+  return '/superset/login/';
 }
 
 const publicBaseUrl = resolvePublicBaseUrl();
@@ -69,6 +69,30 @@ module.exports = {
   admin: {
     email: 'admin@admin.com',
     password: 'admin',
+  },
+  ai: {
+    enabled: process.env.AI_ASSISTANT_ENABLED !== 'false',
+    defaultModel: process.env.AI_DEFAULT_MODEL || 'gpt-4o-mini',
+    proRequiresAuth: process.env.AI_PRO_REQUIRES_AUTH !== 'false',
+    alwaysShowFallback: process.env.AI_ALWAYS_SHOW_FALLBACK === 'true',
+    providers: {
+      openai: {
+        apiKey: process.env.OPENAI_API_KEY || '',
+        baseUrl: process.env.OPENAI_BASE_URL || 'https://api.openai.com/v1',
+      },
+      gemini: {
+        apiKey: process.env.GEMINI_API_KEY || process.env.GOOGLE_GEMINI_API_KEY || '',
+      },
+      deepseek: {
+        apiKey: process.env.DEEPSEEK_API_KEY || '',
+        baseUrl: process.env.DEEPSEEK_BASE_URL || 'https://api.deepseek.com/v1',
+      },
+      custom: {
+        apiKey: process.env.OPENAI_COMPAT_API_KEY || '',
+        baseUrl: process.env.OPENAI_COMPAT_BASE_URL || '',
+        model: process.env.OPENAI_COMPAT_MODEL || 'default',
+      },
+    },
   },
   redis: {
     enabled: process.env.REDIS_ENABLED !== 'false' && !!(process.env.REDIS_URL || process.env.REDIS_HOST),

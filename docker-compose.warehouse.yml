@@ -68,7 +68,7 @@ services:
       SUPERSET_ADMIN_PASSWORD: admin
       SUPERSET_ADMIN_EMAIL: admin@superset.com
       SUPERSET_PUBLIC_MODE: ${SUPERSET_PUBLIC_ENABLED:-false}
-      SUPERSET_WEBSERVER_BASEPATH: /superset/
+      SUPERSET_WEBSERVER_BASEPATH: /superset
       DORIS_HOST: doris-fe
       DORIS_PORT: 9030
       DORIS_DATABASE: eudr_analytics
@@ -82,9 +82,9 @@ services:
       postgres:
         condition: service_healthy
       doris-fe:
-        condition: service_healthy
+        condition: service_started
     healthcheck:
-      test: ["CMD-SHELL", "curl -sf http://localhost:8088/superset/health || exit 1"]
+      test: ["CMD-SHELL", "curl -sf http://localhost:8088/health || curl -sf http://localhost:8088/login/ || exit 1"]
       interval: 20s
       timeout: 10s
       retries: 20

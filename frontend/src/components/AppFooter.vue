@@ -46,10 +46,6 @@ defineProps({
       <slot>
         {{ text || '© Ministry of Agriculture, Animal Industry and Fisheries (MAAIF) — Republic of Uganda' }}
       </slot>
-      <span class="footer-attr">
-        Coat of arms via
-        <a href="https://commons.wikimedia.org/wiki/File:Coat_of_arms_of_Uganda.svg" target="_blank" rel="noopener noreferrer">Wikimedia Commons</a>
-      </span>
     </div>
   </footer>
 </template>
@@ -74,16 +70,5 @@ defineProps({
   line-height: 1.7;
   max-width: 360px;
   color: rgba(255, 255, 255, 0.7);
-}
-
-.footer-attr {
-  display: block;
-  margin-top: 0.5rem;
-  font-size: 0.7rem;
-  color: rgba(255, 255, 255, 0.4);
-}
-
-.footer-attr a {
-  color: rgba(252, 220, 4, 0.7);
 }
 </style>

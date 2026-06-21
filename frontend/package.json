@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "highcharts": "^11.4.8",
+    "proj4": "^2.12.1",
     "vue": "^3.5.12",
     "vue-i18n": "^9.14.2",
     "vue-router": "^4.4.5"

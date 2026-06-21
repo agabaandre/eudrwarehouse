@@ -3,6 +3,7 @@ import { onMounted, ref } from 'vue';
 import AppHeader from '@/components/AppHeader.vue';
 import AppFooter from '@/components/AppFooter.vue';
 import GovBrandMark from '@/components/GovBrandMark.vue';
+import ComplianceAssistant from '@/components/ComplianceAssistant.vue';
 import { api, formatNumber } from '@/composables/api';
 
 const showGuide = ref(false);
@@ -146,10 +147,12 @@ onMounted(async () => {
 
     <div class="trust-bar" role="list" aria-label="Platform capabilities">
       <div class="trust-item" role="listitem"><span class="trust-dot" /> EUDR-ready traceability</div>
-      <div class="trust-item" role="listitem"><span class="trust-dot" /> PostgreSQL + Apache Doris warehouse</div>
+      <div class="trust-item" role="listitem"><span class="trust-dot" /> AI compliance assistant</div>
       <div class="trust-item" role="listitem"><span class="trust-dot" /> USSD *284# field access</div>
       <div class="trust-item" role="listitem"><span class="trust-dot" /> 7 local languages</div>
     </div>
+
+    <ComplianceAssistant />
 
     <section aria-labelledby="features-title">
       <h2 id="features-title" class="section-title">Everything you need for EUDR compliance</h2>
@@ -175,7 +178,7 @@ onMounted(async () => {
         <article v-if="showSuperset" class="card">
           <div class="card-icon" aria-hidden="true">📈</div>
           <h3>Apache Superset BI</h3>
-          <p>Self-service dashboards and SQL Lab connected to the Apache Doris data warehouse.</p>
+          <p>Self-service dashboards and SQL Lab for compliance reporting and export analytics.</p>
           <a :href="superset.url" class="card-link" target="_blank" rel="noopener noreferrer">
             Open Superset →
           </a>

@@ -193,6 +193,12 @@ CREATE UNIQUE INDEX IF NOT EXISTS idx_exporters_code ON exporters(exporter_code)
 CREATE INDEX IF NOT EXISTS idx_supply_chain_farmer ON supply_chain_links(farmer_id);
 CREATE INDEX IF NOT EXISTS idx_supply_chain_exporter ON supply_chain_links(exporter_id);
 CREATE INDEX IF NOT EXISTS idx_sms_alerts_status ON sms_alerts(status);
+
+CREATE TABLE IF NOT EXISTS ai_settings (
+  id INTEGER PRIMARY KEY DEFAULT 1 CHECK (id = 1),
+  settings JSONB NOT NULL DEFAULT '{}',
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
 `;
 
 async function migrate() {

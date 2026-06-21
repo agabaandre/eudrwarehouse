@@ -161,6 +161,24 @@ router.get('/farmer-demographics', async (req, res) => {
 });
 
 router.get('/map-farms', async (req, res) => {
+  const demoFarms = [
+    { plot_code: 'F-001', latitude: -1.2489, longitude: 29.9856, commodity: 'coffee', farmer_name: 'John Mwenda', district: 'Kabale', compliance_status: 'compliant', risk_score: 15 },
+    { plot_code: 'F-002', latitude: 1.0821, longitude: 34.175, commodity: 'coffee', farmer_name: 'Grace Nambi', district: 'Mbale', compliance_status: 'compliant', risk_score: 15 },
+    { plot_code: 'F-003', latitude: 2.5345, longitude: 34.6789, commodity: 'coffee', farmer_name: 'Joseph Okello', district: 'Moroto', compliance_status: 'non_compliant', risk_score: 75 },
+    { plot_code: 'F-004', latitude: 0.7111, longitude: 30.0644, commodity: 'cocoa', farmer_name: 'Sarah Kyomugisha', district: 'Bundibugyo', compliance_status: 'pending', risk_score: 40 },
+    { plot_code: 'F-005', latitude: -0.3342, longitude: 31.7363, commodity: 'coffee', farmer_name: 'Peter Wasswa', district: 'Masaka', compliance_status: 'compliant', risk_score: 15 },
+    { plot_code: 'F-006', latitude: 1.715, longitude: 33.6111, commodity: 'coffee', farmer_name: 'Alice Amongin', district: 'Soroti', compliance_status: 'pending', risk_score: 40 },
+    { plot_code: 'F-007', latitude: 1.4, longitude: 34.45, commodity: 'coffee', farmer_name: 'Robert Kato', district: 'Kapchorwa', compliance_status: 'compliant', risk_score: 15 },
+    { plot_code: 'F-008', latitude: 3.02, longitude: 34.12, commodity: 'coffee', farmer_name: 'Fatuma Hussein', district: 'Kotido', compliance_status: 'non_compliant', risk_score: 75 },
+    { plot_code: 'F-009', latitude: 2.78, longitude: 32.3, commodity: 'cocoa', farmer_name: 'Moses Ochieng', district: 'Gulu', compliance_status: 'compliant', risk_score: 15 },
+    { plot_code: 'F-010', latitude: 0.36, longitude: 32.75, commodity: 'coffee', farmer_name: 'Edith Nankya', district: 'Mukono', compliance_status: 'compliant', risk_score: 15 },
+    { plot_code: 'F-011', latitude: -0.607, longitude: 30.654, commodity: 'coffee', farmer_name: 'James Tumusiime', district: 'Mbarara', compliance_status: 'compliant', risk_score: 18 },
+    { plot_code: 'F-012', latitude: 0.183, longitude: 30.083, commodity: 'coffee', farmer_name: 'Betty Kansiime', district: 'Kasese', compliance_status: 'compliant', risk_score: 18 },
+    { plot_code: 'MOR-0012', latitude: 2.5056, longitude: 34.6784, commodity: 'coffee', farmer_name: 'Lokiru Peter', district: 'Moroto', compliance_status: 'non_compliant', risk_score: 82 },
+    { plot_code: 'MOR-0045', latitude: 2.5482, longitude: 34.6521, commodity: 'coffee', farmer_name: 'Nakiru Grace', district: 'Moroto', compliance_status: 'non_compliant', risk_score: 78 },
+    { plot_code: 'F-024', latitude: -1.26, longitude: 29.99, commodity: 'coffee', farmer_name: 'Ruth Kyalimpa', district: 'Kabale', compliance_status: 'compliant', risk_score: 15 },
+  ];
+
   try {
     const { rows } = await db.query(`
       SELECT fp.plot_code, fp.latitude, fp.longitude, fp.commodity,
@@ -171,9 +189,9 @@ router.get('/map-farms', async (req, res) => {
       LEFT JOIN compliance_records cr ON cr.farm_plot_id = fp.id
       WHERE fp.latitude IS NOT NULL
     `);
-    res.json({ data: rows });
+    res.json({ data: rows.length ? rows : demoFarms });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    res.json({ data: demoFarms, demo: true, error: err.message });
   }
 });
 

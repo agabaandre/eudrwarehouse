@@ -1,8 +1,13 @@
 import { onBeforeUnmount } from 'vue';
 import Highcharts from 'highcharts/highmaps';
 import Exporting from 'highcharts/modules/exporting';
+import proj4 from 'proj4';
 
 Exporting(Highcharts);
+
+if (typeof window !== 'undefined') {
+  window.proj4 = proj4;
+}
 
 Highcharts.setOptions({
   credits: { enabled: false },
@@ -212,26 +217,37 @@ export function buildFarmMapOptions(farmPoints) {
       name: p.name,
       lat: p.lat,
       lon: p.lon,
-      marker: {
-        fillColor: p.color || '#0f5132',
-        lineColor: '#fff',
-        lineWidth: 1,
-        radius: 7,
-      },
+      color: p.color || '#0f5132',
+      district: p.district,
+      status: p.status,
+      commodity: p.commodity,
     }));
 
   const series = [ugandaBaseSeries(), {
     type: 'mappoint',
     name: 'Farms',
+    zIndex: 5,
     data: points,
-    keys: ['name', 'lat', 'lon'],
+    marker: {
+      radius: 7,
+      lineWidth: 1,
+      lineColor: '#fff',
+    },
     tooltip: {
-      pointFormat: '<b>{point.name}</b><br>Lat: {point.lat:.4f}, Lon: {point.lon:.4f}',
+      headerFormat: '',
+      pointFormatter() {
+        const lines = [`<b>${this.name}</b>`];
+        if (this.district) lines.push(`District: ${this.district}`);
+        if (this.status) lines.push(`EUDR status: ${this.status}`);
+        if (this.commodity) lines.push(`Crop: ${this.commodity}`);
+        lines.push(`Lat: ${this.lat.toFixed(4)}, Lon: ${this.lon.toFixed(4)}`);
+        return lines.join('<br>');
+      },
     },
   }].filter(Boolean);
 
   return {
-    chart: { map: UG_MAP_KEY },
+    chart: { map: UG_MAP_KEY, proj4 },
     title: { text: null },
     mapNavigation: { enabled: true, buttonOptions: { verticalAlign: 'bottom' } },
     legend: { enabled: points.length > 0 },

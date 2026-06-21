@@ -23,12 +23,17 @@ async function login() {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ email: loginEmail.value, password: loginPassword.value }),
     });
-    if (!res.ok) throw new Error('Invalid credentials');
-    const data = await res.json();
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) {
+      throw new Error(data.error || `Sign in failed (${res.status})`);
+    }
+    if (!data.token) {
+      throw new Error('Sign in failed — no session token returned.');
+    }
     localStorage.setItem('eudr_token', data.token);
     isLoggedIn.value = true;
-  } catch {
-    loginError.value = 'Login failed. Use admin@admin.com / admin';
+  } catch (e) {
+    loginError.value = e.message || 'Login failed. Use admin@admin.com / admin';
   }
 }
 

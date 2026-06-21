@@ -12,53 +12,65 @@ router.post('/login', login);
 router.get('/me', authMiddleware, me);
 
 router.get('/config', httpCache('config', cache.TTL.config), async (req, res) => {
-  const supersetPath = '/superset/login/';
-  const supersetAbsolute = config.superset.url.startsWith('/')
-    ? null
-    : config.superset.url;
+  try {
+    const supersetPath = '/superset/login/';
+    const supersetAbsolute = config.superset.url.startsWith('/')
+      ? null
+      : config.superset.url;
 
-  const superset = {
-    enabled: config.superset.warehouseRequired,
-    url: supersetPath,
-    absolute_url: supersetAbsolute,
-    login_url: '/superset/login/',
-    base_path: config.superset.basePath,
-    public_enabled: config.superset.publicEnabled,
-    warehouse_required: config.superset.warehouseRequired,
-    admin_user: config.superset.adminUser,
-    admin_password: config.superset.adminPassword,
-    note: config.superset.warehouseRequired
-      ? (config.superset.publicEnabled
-        ? 'Superset opens at /superset/welcome via nginx (port 8003)'
-        : 'Superset link is shown in the management dashboard — requires ENABLE_WAREHOUSE=true')
-      : 'Start warehouse stack: ENABLE_WAREHOUSE=true ./scripts/deploy.sh, then sudo ./scripts/setup-nginx.sh',
-  };
+    const superset = {
+      enabled: config.superset.warehouseRequired,
+      url: supersetPath,
+      absolute_url: supersetAbsolute,
+      login_url: '/superset/login/',
+      base_path: config.superset.basePath,
+      public_enabled: config.superset.publicEnabled,
+      warehouse_required: config.superset.warehouseRequired,
+      admin_user: config.superset.adminUser,
+      admin_password: config.superset.adminPassword,
+      note: config.superset.warehouseRequired
+        ? (config.superset.publicEnabled
+          ? 'Superset opens at /superset/welcome via nginx (port 8003)'
+          : 'Superset link is shown in the management dashboard — requires ENABLE_WAREHOUSE=true')
+        : 'Start warehouse stack: ENABLE_WAREHOUSE=true ./scripts/deploy.sh, then sudo ./scripts/setup-nginx.sh',
+    };
 
-  res.json({
-    public_user_guide_enabled: config.publicUserGuideEnabled,
-    public_base_url: config.publicBaseUrl,
-    platform: 'MAAIF EUDR Compliance Demonstration Platform',
-    version: '2.0.0',
-    frontend: 'vue3',
-    superset,
-    warehouse: {
-      engine: 'Apache Doris',
-      bi_tool: 'Apache Superset',
-      sync_interval_ms: config.warehouse.syncIntervalMs,
-    },
-    geo_layers: ['/api/geo/layers'],
-    google_maps: getPublicView(await getMapSettings()),
-    registration: {
-      hub_url: '/registration',
-      farmer_register: 'POST /api/registration/farmer',
-      exporter_register: 'POST /api/registration/exporter',
-      supply_chain: 'GET /api/supply-chain/network',
-      training: 'GET /api/training/modules',
-      ussd_code: '*284#',
-      sms_alerts: 'GET /api/alerts',
-      mobile_link: 'POST /api/channels/mobile/register',
-    },
-  });
+    let googleMaps;
+    try {
+      googleMaps = getPublicMapView(await getMapSettings());
+    } catch {
+      googleMaps = getPublicMapView({});
+    }
+
+    res.json({
+      public_user_guide_enabled: config.publicUserGuideEnabled,
+      public_base_url: config.publicBaseUrl,
+      platform: 'MAAIF EUDR Compliance Demonstration Platform',
+      version: '2.0.0',
+      frontend: 'vue3',
+      superset,
+      warehouse: {
+        engine: 'Apache Doris',
+        bi_tool: 'Apache Superset',
+        sync_interval_ms: config.warehouse.syncIntervalMs,
+      },
+      geo_layers: ['/api/geo/layers'],
+      google_maps: googleMaps,
+      registration: {
+        hub_url: '/registration',
+        farmer_register: 'POST /api/registration/farmer',
+        exporter_register: 'POST /api/registration/exporter',
+        supply_chain: 'GET /api/supply-chain/network',
+        training: 'GET /api/training/modules',
+        ussd_code: '*284#',
+        sms_alerts: 'GET /api/alerts',
+        mobile_link: 'POST /api/channels/mobile/register',
+      },
+    });
+  } catch (err) {
+    console.error('Auth config error:', err.message);
+    res.status(500).json({ error: 'Configuration unavailable' });
+  }
 });
 
 module.exports = router;

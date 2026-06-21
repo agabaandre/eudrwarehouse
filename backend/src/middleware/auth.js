@@ -26,8 +26,12 @@ async function login(req, res) {
   if (!user || !(await bcrypt.compare(password, user.password_hash))) {
     return res.status(401).json({ error: 'Invalid credentials' });
   }
-  const token = jwt.sign({ id: user.id, email: user.email, role: user.role }, config.jwtSecret, { expiresIn: '24h' });
+  const token = jwt.sign({ id: user.id, email: user.email, role: user.role }, config.jwtSecret, { expiresIn: '7d' });
   res.json({ token, user: { email: user.email, role: user.role } });
 }
 
-module.exports = { authMiddleware, login };
+function me(req, res) {
+  res.json({ user: req.user });
+}
+
+module.exports = { authMiddleware, login, me };

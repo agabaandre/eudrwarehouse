@@ -1,7 +1,9 @@
 import { createRouter, createWebHistory } from 'vue-router';
 import HomeView from '@/views/HomeView.vue';
 import AnalyticsView from '@/views/AnalyticsView.vue';
-import ManagementView from '@/views/ManagementView.vue';
+import ManagementLayout from '@/views/ManagementLayout.vue';
+import ManagementDashboardView from '@/views/ManagementDashboardView.vue';
+import ManagementConfigView from '@/views/ManagementConfigView.vue';
 import MapsView from '@/views/MapsView.vue';
 import RegistrationView from '@/views/RegistrationView.vue';
 
@@ -46,9 +48,7 @@ const router = createRouter({
     },
     {
       path: '/management',
-      alias: '/management/',
-      name: 'management',
-      component: ManagementView,
+      component: ManagementLayout,
       meta: {
         private: true,
         seo: {
@@ -57,6 +57,25 @@ const router = createRouter({
           robots: 'noindex, nofollow, noarchive, nosnippet',
         },
       },
+      children: [
+        {
+          path: '',
+          name: 'management',
+          component: ManagementDashboardView,
+        },
+        {
+          path: 'configuration',
+          name: 'management-configuration',
+          component: ManagementConfigView,
+          meta: {
+            seo: {
+              title: 'Admin Configuration | MAAIF EUDR',
+              description: 'MAAIF officer configuration for AI, warehouse, and platform settings.',
+              robots: 'noindex, nofollow, noarchive, nosnippet',
+            },
+          },
+        },
+      ],
     },
     {
       path: '/maps',

@@ -1,12 +1,14 @@
 const express = require('express');
 const config = require('../config');
-const { login } = require('../middleware/auth');
+const { login, authMiddleware, me } = require('../middleware/auth');
 const { httpCache } = require('../middleware/cache');
 const cache = require('../services/cache');
 
 const router = express.Router();
 
 router.post('/login', login);
+
+router.get('/me', authMiddleware, me);
 
 router.get('/config', httpCache('config', cache.TTL.config), (req, res) => {
   const supersetPath = '/superset/login/';

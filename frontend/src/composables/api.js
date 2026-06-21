@@ -17,16 +17,20 @@ export async function api(path, options = {}) {
 
 export async function apiAuth(path, options = {}) {
   const token = localStorage.getItem('eudr_token');
+  const isFormData = options.body instanceof FormData;
   const res = await fetch(path, {
     ...options,
     headers: {
-      ...(options.body instanceof FormData ? {} : { 'Content-Type': 'application/json' }),
+      ...(isFormData ? {} : { 'Content-Type': 'application/json' }),
       ...(token ? { Authorization: `Bearer ${token}` } : {}),
       ...options.headers,
     },
   });
   if (!res.ok) {
     const err = await res.json().catch(() => ({}));
+    if (res.status === 401) {
+      localStorage.removeItem('eudr_token');
+    }
     throw new Error(err.error || `API error: ${res.status}`);
   }
   return res.json();

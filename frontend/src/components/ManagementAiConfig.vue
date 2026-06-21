@@ -1,6 +1,9 @@
 <script setup>
-import { onMounted, ref } from 'vue';
+import { inject, onMounted, ref } from 'vue';
 import { apiAuth } from '@/composables/api';
+import { ensureManagementSession } from '@/composables/managementAuth';
+
+const auth = inject('managementAuth', null);
 
 const loading = ref(true);
 const saving = ref(false);
@@ -12,6 +15,14 @@ const testReply = ref('');
 const testLoading = ref(false);
 const testSearch = ref(true);
 const testCompliance = ref(true);
+
+const configured = ref({
+  openai: false,
+  gemini: false,
+  deepseek: false,
+  custom: false,
+  serper: false,
+});
 
 const form = ref({
   enabled: true,
@@ -45,12 +56,45 @@ const modelOptions = [
   { id: 'platform-guide', label: 'Platform Guide (offline)' },
 ];
 
+function isAuthError(message) {
+  return /expired|authentication|invalid or expired token|sign in/i.test(message || '');
+}
+
+function handleApiError(e) {
+  if (isAuthError(e.message)) {
+    auth?.handleAuthError?.(e.message);
+  }
+  return e.message;
+}
+
+function stripMaskedSecrets(payload) {
+  const next = JSON.parse(JSON.stringify(payload));
+  for (const name of Object.keys(next.providers || {})) {
+    const key = next.providers[name].api_key;
+    if (!key || key.includes('••••') || key.includes('****')) {
+      delete next.providers[name].api_key;
+    }
+  }
+  if (next.web_search?.serper_api_key?.includes('••••')) {
+    delete next.web_search.serper_api_key;
+  }
+  return next;
+}
+
 async function loadConfig() {
   loading.value = true;
   saveError.value = '';
   try {
+    await ensureManagementSession();
     const data = await apiAuth('/api/assistant/admin/config');
     preview.value = data.compliance_context_preview || '';
+    configured.value = {
+      openai: !!data.providers?.openai?.configured,
+      gemini: !!data.providers?.gemini?.configured,
+      deepseek: !!data.providers?.deepseek?.configured,
+      custom: !!data.providers?.custom?.configured,
+      serper: !!data.web_search?.serper_configured,
+    };
     form.value = {
       enabled: data.enabled !== false,
       default_model: data.default_model || 'gpt-4o-mini',
@@ -61,28 +105,28 @@ async function loadConfig() {
       system_prompt_extra: data.system_prompt_extra || '',
       providers: {
         openai: {
-          api_key: data.providers?.openai?.api_key_masked || '',
+          api_key: '',
           base_url: data.providers?.openai?.base_url || 'https://api.openai.com/v1',
         },
-        gemini: { api_key: data.providers?.gemini?.api_key_masked || '' },
+        gemini: { api_key: '' },
         deepseek: {
-          api_key: data.providers?.deepseek?.api_key_masked || '',
+          api_key: '',
           base_url: data.providers?.deepseek?.base_url || 'https://api.deepseek.com/v1',
         },
         custom: {
-          api_key: data.providers?.custom?.api_key_masked || '',
+          api_key: '',
           base_url: data.providers?.custom?.base_url || '',
           model: data.providers?.custom?.model || 'default',
         },
       },
       web_search: {
         provider: data.web_search?.provider || 'duckduckgo',
-        serper_api_key: data.web_search?.serper_api_key_masked || '',
+        serper_api_key: '',
         max_results: data.web_search?.max_results || 5,
       },
     };
   } catch (e) {
-    saveError.value = e.message;
+    saveError.value = handleApiError(e);
   } finally {
     loading.value = false;
   }
@@ -93,22 +137,16 @@ async function saveConfig() {
   saveMsg.value = '';
   saveError.value = '';
   try {
-    const payload = { ...form.value };
-    if (!payload.providers.openai.api_key) delete payload.providers.openai.api_key;
-    if (!payload.providers.gemini.api_key) delete payload.providers.gemini.api_key;
-    if (!payload.providers.deepseek.api_key) delete payload.providers.deepseek.api_key;
-    if (!payload.providers.custom.api_key) delete payload.providers.custom.api_key;
-    if (!payload.web_search.serper_api_key) delete payload.web_search.serper_api_key;
-
+    await ensureManagementSession();
+    const payload = stripMaskedSecrets(form.value);
     await apiAuth('/api/assistant/admin/config', {
       method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(payload),
     });
     saveMsg.value = 'AI configuration saved.';
     await loadConfig();
   } catch (e) {
-    saveError.value = e.message;
+    saveError.value = handleApiError(e);
   } finally {
     saving.value = false;
   }
@@ -116,10 +154,11 @@ async function saveConfig() {
 
 async function refreshPreview() {
   try {
+    await ensureManagementSession();
     const data = await apiAuth('/api/assistant/admin/compliance-preview');
     preview.value = data.context || '';
   } catch (e) {
-    saveError.value = e.message;
+    saveError.value = handleApiError(e);
   }
 }
 
@@ -128,9 +167,9 @@ async function testAssistant() {
   testLoading.value = true;
   testReply.value = '';
   try {
+    await ensureManagementSession();
     const res = await apiAuth('/api/assistant/chat', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         model: form.value.default_model,
         include_compliance_data: testCompliance.value,
@@ -145,7 +184,7 @@ async function testAssistant() {
     }
     testReply.value = text;
   } catch (e) {
-    testReply.value = `Error: ${e.message}`;
+    testReply.value = `Error: ${handleApiError(e)}`;
   } finally {
     testLoading.value = false;
   }
@@ -156,11 +195,10 @@ onMounted(loadConfig);
 
 <template>
   <div class="card ai-config-card">
-    <h3>AI Compliance Assistant — Configuration</h3>
+    <h3>AI Compliance Assistant</h3>
     <p class="ai-config-intro">
       Configure GPT, Gemini, DeepSeek, or any OpenAI-compatible model. The assistant can use
-      <strong>live platform compliance demo data</strong> and optional <strong>internet search</strong>
-      (DuckDuckGo + EU reference sources; Serper optional).
+      <strong>live platform compliance demo data</strong> and optional <strong>internet search</strong>.
     </p>
 
     <p v-if="loading" style="color:var(--muted)">Loading configuration…</p>
@@ -188,24 +226,32 @@ onMounted(loadConfig);
 
         <fieldset class="ai-fieldset">
           <legend>OpenAI / GPT</legend>
-          <label>API key<br><input v-model="form.providers.openai.api_key" type="password" placeholder="sk-…" autocomplete="off"></label>
+          <label>API key<br>
+            <input v-model="form.providers.openai.api_key" type="password" :placeholder="configured.openai ? 'Configured — enter new key to replace' : 'sk-…'" autocomplete="off">
+          </label>
           <label>Base URL<br><input v-model="form.providers.openai.base_url" type="url" placeholder="https://api.openai.com/v1"></label>
         </fieldset>
 
         <fieldset class="ai-fieldset">
           <legend>Google Gemini</legend>
-          <label>API key<br><input v-model="form.providers.gemini.api_key" type="password" placeholder="AIza…" autocomplete="off"></label>
+          <label>API key<br>
+            <input v-model="form.providers.gemini.api_key" type="password" :placeholder="configured.gemini ? 'Configured — enter new key to replace' : 'AIza…'" autocomplete="off">
+          </label>
         </fieldset>
 
         <fieldset class="ai-fieldset">
           <legend>DeepSeek</legend>
-          <label>API key<br><input v-model="form.providers.deepseek.api_key" type="password" autocomplete="off"></label>
+          <label>API key<br>
+            <input v-model="form.providers.deepseek.api_key" type="password" :placeholder="configured.deepseek ? 'Configured — enter new key to replace' : 'API key'" autocomplete="off">
+          </label>
           <label>Base URL<br><input v-model="form.providers.deepseek.base_url" type="url"></label>
         </fieldset>
 
         <fieldset class="ai-fieldset">
           <legend>Custom (OpenAI-compatible / MCP gateway)</legend>
-          <label>API key<br><input v-model="form.providers.custom.api_key" type="password" autocomplete="off"></label>
+          <label>API key<br>
+            <input v-model="form.providers.custom.api_key" type="password" :placeholder="configured.custom ? 'Configured — enter new key to replace' : 'API key'" autocomplete="off">
+          </label>
           <label>Base URL<br><input v-model="form.providers.custom.base_url" type="url" placeholder="https://your-gateway/v1"></label>
           <label>Model name<br><input v-model="form.providers.custom.model" type="text" placeholder="model-id"></label>
         </fieldset>
@@ -213,7 +259,7 @@ onMounted(loadConfig);
         <fieldset class="ai-fieldset">
           <legend>Internet search</legend>
           <label>Serper API key (optional, better Google results)<br>
-            <input v-model="form.web_search.serper_api_key" type="password" autocomplete="off">
+            <input v-model="form.web_search.serper_api_key" type="password" :placeholder="configured.serper ? 'Configured — enter new key to replace' : 'Optional'" autocomplete="off">
           </label>
           <label>Max results<br>
             <input v-model.number="form.web_search.max_results" type="number" min="1" max="10">
@@ -253,7 +299,7 @@ onMounted(loadConfig);
 </template>
 
 <style scoped>
-.ai-config-card { margin-top: 1.5rem; }
+.ai-config-card { margin-top: 0; }
 .ai-config-intro { font-size: 0.9rem; color: var(--muted); margin-bottom: 1.25rem; max-width: 720px; }
 .ai-config-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1rem; margin-bottom: 1rem; }
 .ai-fieldset { border: 1px solid var(--border-light); border-radius: var(--radius); padding: 1rem; background: var(--bg); }

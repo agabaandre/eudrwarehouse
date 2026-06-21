@@ -20,8 +20,10 @@ const googleMapEl = ref(null);
 const hcMapEl = ref(null);
 const fallbackMapEl = ref(null);
 const mapError = ref('');
+const layerError = ref('');
 const mapNotice = ref('');
 const loading = ref(true);
+const layersLoading = ref(true);
 const googleMapsKey = ref(import.meta.env.VITE_GOOGLE_MAPS_API_KEY || '');
 const showDistrictPanel = ref(true);
 let geoMap = null;
@@ -36,11 +38,42 @@ const LAYER_CONFIG = {
 };
 
 async function loadLayers() {
-  const res = await api('/api/geo/layers');
-  layers.value = (res.layers || []).filter((layer) => !HIDDEN_LAYERS.value.has(layer.id));
-  if (layers.value.length && !layers.value.find((l) => l.id === activeLayer.value)) {
-    activeLayer.value = layers.value[0].id;
+  layersLoading.value = true;
+  layerError.value = '';
+  try {
+    const res = await api('/api/geo/layers');
+    layers.value = (res.layers || []).filter((layer) => !HIDDEN_LAYERS.value.has(layer.id));
+    if (layers.value.length && !layers.value.find((l) => l.id === activeLayer.value)) {
+      activeLayer.value = layers.value[0].id;
+    }
+    if (!layers.value.length) {
+      layerError.value = t('maps.noLayers');
+    }
+  } catch (e) {
+    layerError.value = e.message || t('maps.noLayers');
+    layers.value = [];
+  } finally {
+    layersLoading.value = false;
   }
+}
+
+function applyMapConfig(cfg = {}) {
+  const maps = cfg.google_maps || {};
+  if (maps.api_key) {
+    googleMapsKey.value = maps.api_key;
+  } else if (maps.enabled === false) {
+    googleMapsKey.value = '';
+  }
+  if (Array.isArray(maps.hidden_layer_ids)) {
+    HIDDEN_LAYERS.value = new Set(maps.hidden_layer_ids);
+  }
+  if (maps.default_metric) {
+    metric.value = maps.default_metric;
+  }
+  if (maps.default_layer) {
+    activeLayer.value = maps.default_layer;
+  }
+  showDistrictPanel.value = maps.show_highcharts_district_panel !== false;
 }
 
 async function renderHighchartsMap(el, geo, cfg, { districtLabels = false } = {}) {
@@ -147,25 +180,20 @@ onBeforeUnmount(() => {
 });
 
 onMounted(async () => {
+  loading.value = true;
+  mapError.value = '';
   try {
-    const cfg = await api('/api/auth/config');
-    const maps = cfg.google_maps || {};
-    if (maps.api_key) {
-      googleMapsKey.value = maps.api_key;
-    } else if (maps.enabled === false) {
-      googleMapsKey.value = '';
-    }
-    if (Array.isArray(maps.hidden_layer_ids)) {
-      HIDDEN_LAYERS.value = new Set(maps.hidden_layer_ids);
-    }
-    if (maps.default_metric) {
-      metric.value = maps.default_metric;
-    }
-    if (maps.default_layer) {
-      activeLayer.value = maps.default_layer;
-    }
-    showDistrictPanel.value = maps.show_highcharts_district_panel !== false;
+    const cfg = await api('/api/auth/config').catch((e) => {
+      console.warn('Map config unavailable:', e.message);
+      return {};
+    });
+    applyMapConfig(cfg);
     await loadLayers();
+    if (!layers.value.length) {
+      loading.value = false;
+      return;
+    }
+    await nextTick();
     await renderMap();
   } catch (e) {
     mapError.value = e.message || t('maps.loadError');
@@ -206,7 +234,8 @@ onMounted(async () => {
         {{ layer.name }}
       </button>
     </div>
-    <p v-else class="form-msg error">{{ mapError || t('maps.noLayers') }}</p>
+    <p v-else-if="layersLoading" class="form-msg map-status">{{ t('common.loading') }}</p>
+    <p v-else class="form-msg error">{{ layerError || t('maps.noLayers') }}</p>
 
     <div class="chart-box map-panel">
       <h3>{{ mapTitle }}</h3>
@@ -253,4 +282,5 @@ onMounted(async () => {
 .hc-district-panel { margin-top: 1.5rem; }
 .hc-map-canvas { height: 420px; width: 100%; }
 .map-panel-note { font-size: 0.88rem; color: var(--muted); margin: 0.35rem 0 0.75rem; }
+.map-status { color: var(--muted); margin-bottom: 1rem; }
 </style>

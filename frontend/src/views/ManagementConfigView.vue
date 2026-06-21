@@ -1,6 +1,7 @@
 <script setup>
 import { inject, onMounted, ref } from 'vue';
 import ManagementAiConfig from '@/components/ManagementAiConfig.vue';
+import ManagementMapsConfig from '@/components/ManagementMapsConfig.vue';
 import { api, apiAuth } from '@/composables/api';
 
 const auth = inject('managementAuth', null);
@@ -15,9 +16,10 @@ const platform = ref({});
 
 const tabs = [
   { id: 'ai', label: 'AI Assistant' },
+  { id: 'maps', label: 'Maps' },
   { id: 'warehouse', label: 'Data Warehouse' },
   { id: 'ingestion', label: 'Data Ingestion' },
-  { id: 'platform', label: 'Platform & Maps' },
+  { id: 'platform', label: 'Platform' },
 ];
 
 async function loadMeta() {
@@ -81,7 +83,7 @@ onMounted(loadMeta);
   <div class="container">
     <div class="mgmt-page-intro">
       <h2>Administration &amp; Configuration</h2>
-      <p>Manage AI providers, warehouse sync, data ingestion, and platform integration settings.</p>
+      <p>Manage AI providers, geospatial maps, warehouse sync, data ingestion, and platform integration settings.</p>
     </div>
 
     <div class="config-tabs" role="tablist" aria-label="Configuration sections">
@@ -101,6 +103,10 @@ onMounted(loadMeta);
 
     <div v-show="activeTab === 'ai'" role="tabpanel">
       <ManagementAiConfig />
+    </div>
+
+    <div v-show="activeTab === 'maps'" role="tabpanel">
+      <ManagementMapsConfig />
     </div>
 
     <div v-show="activeTab === 'warehouse'" class="card config-panel" role="tabpanel">
@@ -131,12 +137,12 @@ onMounted(loadMeta);
     </div>
 
     <div v-show="activeTab === 'platform'" class="card config-panel" role="tabpanel">
-      <h3>Platform &amp; Maps</h3>
+      <h3>Platform</h3>
       <dl class="config-dl">
         <dt>Public base URL</dt>
         <dd>{{ platform.public_base_url || 'Not set (PUBLIC_BASE_URL)' }}</dd>
-        <dt>Google Maps</dt>
-        <dd>{{ platform.google_maps?.enabled ? 'Configured via GOOGLE_MAPS_API_KEY' : 'Not configured — maps page uses Highcharts fallback' }}</dd>
+        <dt>Maps</dt>
+        <dd>{{ platform.google_maps?.enabled ? 'Google Maps configured — see Maps tab' : 'Highcharts fallback — configure in Maps tab' }}</dd>
         <dt>Warehouse engine</dt>
         <dd>{{ platform.warehouse?.engine || 'Apache Doris' }}</dd>
         <dt>BI tool</dt>
@@ -144,7 +150,7 @@ onMounted(loadMeta);
         <dt>Warehouse sync interval</dt>
         <dd>{{ platform.warehouse?.sync_interval_ms ? `${Math.round(platform.warehouse.sync_interval_ms / 60000)} minutes` : '5 minutes' }}</dd>
       </dl>
-      <p class="config-note">Environment variables for production are set in <code>.env</code> on the server. Use the AI Assistant tab to store provider API keys in the database.</p>
+      <p class="config-note">Environment variables for production are set in <code>.env</code> on the server. Use the AI Assistant and Maps tabs to store API keys in the database.</p>
     </div>
   </div>
 </template>

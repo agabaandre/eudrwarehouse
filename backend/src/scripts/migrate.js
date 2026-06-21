@@ -199,6 +199,12 @@ CREATE TABLE IF NOT EXISTS ai_settings (
   settings JSONB NOT NULL DEFAULT '{}',
   updated_at TIMESTAMPTZ DEFAULT NOW()
 );
+
+CREATE TABLE IF NOT EXISTS map_settings (
+  id INTEGER PRIMARY KEY DEFAULT 1 CHECK (id = 1),
+  settings JSONB NOT NULL DEFAULT '{}',
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
 `;
 
 async function migrate() {

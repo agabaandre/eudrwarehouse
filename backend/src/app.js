@@ -25,6 +25,7 @@ const trainingRoutes = require('./routes/training');
 const channelsRoutes = require('./routes/channels');
 const alertsRoutes = require('./routes/alerts');
 const assistantRoutes = require('./routes/assistant');
+const mapsRoutes = require('./routes/maps');
 const sitemapRoutes = require('./routes/sitemap');
 
 const app = express();
@@ -69,6 +70,7 @@ app.use('/api/training', trainingRoutes);
 app.use('/api/channels', channelsRoutes);
 app.use('/api/alerts', alertsRoutes);
 app.use('/api/assistant', assistantRoutes);
+app.use('/api/maps', mapsRoutes);
 
 app.get('/api/health', async (req, res) => {
   res.json({

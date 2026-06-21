@@ -10,7 +10,7 @@ import { buildChoroplethOptions, loadUgandaMap, useCharts } from '@/composables/
 const { t } = useI18n();
 const { mapChart } = useCharts();
 
-const HIDDEN_LAYERS = new Set(['farm-clusters']);
+const HIDDEN_LAYERS = ref(new Set(['farm-clusters']));
 
 const layers = ref([]);
 const activeLayer = ref('districts');
@@ -23,6 +23,7 @@ const mapError = ref('');
 const mapNotice = ref('');
 const loading = ref(true);
 const googleMapsKey = ref(import.meta.env.VITE_GOOGLE_MAPS_API_KEY || '');
+const showDistrictPanel = ref(true);
 let geoMap = null;
 let hcMapInstance = null;
 let fallbackMapInstance = null;
@@ -36,7 +37,7 @@ const LAYER_CONFIG = {
 
 async function loadLayers() {
   const res = await api('/api/geo/layers');
-  layers.value = (res.layers || []).filter((layer) => !HIDDEN_LAYERS.has(layer.id));
+  layers.value = (res.layers || []).filter((layer) => !HIDDEN_LAYERS.value.has(layer.id));
   if (layers.value.length && !layers.value.find((l) => l.id === activeLayer.value)) {
     activeLayer.value = layers.value[0].id;
   }
@@ -148,9 +149,22 @@ onBeforeUnmount(() => {
 onMounted(async () => {
   try {
     const cfg = await api('/api/auth/config');
-    if (cfg.google_maps?.api_key) {
-      googleMapsKey.value = cfg.google_maps.api_key;
+    const maps = cfg.google_maps || {};
+    if (maps.api_key) {
+      googleMapsKey.value = maps.api_key;
+    } else if (maps.enabled === false) {
+      googleMapsKey.value = '';
     }
+    if (Array.isArray(maps.hidden_layer_ids)) {
+      HIDDEN_LAYERS.value = new Set(maps.hidden_layer_ids);
+    }
+    if (maps.default_metric) {
+      metric.value = maps.default_metric;
+    }
+    if (maps.default_layer) {
+      activeLayer.value = maps.default_layer;
+    }
+    showDistrictPanel.value = maps.show_highcharts_district_panel !== false;
     await loadLayers();
     await renderMap();
   } catch (e) {
@@ -203,7 +217,7 @@ onMounted(async () => {
       <div v-show="!googleMapsKey" ref="fallbackMapEl" class="google-map-canvas" />
     </div>
 
-    <div v-if="activeLayer === 'districts'" class="chart-box map-panel hc-district-panel">
+    <div v-if="activeLayer === 'districts' && showDistrictPanel" class="chart-box map-panel hc-district-panel">
       <h3>District boundaries with names (Highcharts)</h3>
       <p class="map-panel-note">District labels are shown on both Google Maps and this choropleth view.</p>
       <div ref="hcMapEl" class="hc-map-canvas" />

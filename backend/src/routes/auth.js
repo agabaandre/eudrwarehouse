@@ -3,6 +3,7 @@ const config = require('../config');
 const { login, authMiddleware, me } = require('../middleware/auth');
 const { httpCache } = require('../middleware/cache');
 const cache = require('../services/cache');
+const { getEffectiveSettings: getMapSettings, getPublicView: getPublicMapView } = require('../services/mapSettings');
 
 const router = express.Router();
 
@@ -10,7 +11,7 @@ router.post('/login', login);
 
 router.get('/me', authMiddleware, me);
 
-router.get('/config', httpCache('config', cache.TTL.config), (req, res) => {
+router.get('/config', httpCache('config', cache.TTL.config), async (req, res) => {
   const supersetPath = '/superset/login/';
   const supersetAbsolute = config.superset.url.startsWith('/')
     ? null
@@ -46,10 +47,7 @@ router.get('/config', httpCache('config', cache.TTL.config), (req, res) => {
       sync_interval_ms: config.warehouse.syncIntervalMs,
     },
     geo_layers: ['/api/geo/layers'],
-    google_maps: {
-      api_key: config.googleMaps.apiKey,
-      enabled: !!config.googleMaps.apiKey,
-    },
+    google_maps: getPublicView(await getMapSettings()),
     registration: {
       hub_url: '/registration',
       farmer_register: 'POST /api/registration/farmer',

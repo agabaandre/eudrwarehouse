@@ -3,7 +3,6 @@ import { onMounted, ref } from 'vue';
 import AppHeader from '@/components/AppHeader.vue';
 import AppFooter from '@/components/AppFooter.vue';
 import GovBrandMark from '@/components/GovBrandMark.vue';
-import ComplianceAssistant from '@/components/ComplianceAssistant.vue';
 import { api, formatNumber } from '@/composables/api';
 
 const showGuide = ref(false);
@@ -183,8 +182,6 @@ onMounted(async () => {
       <div class="trust-item" role="listitem"><span class="trust-dot" /> USSD *284# field access</div>
       <div class="trust-item" role="listitem"><span class="trust-dot" /> 7 local languages</div>
     </div>
-
-    <ComplianceAssistant />
 
     <section class="cta-band" aria-labelledby="cta-title">
       <h3 id="cta-title">Ready to demonstrate EUDR compliance?</h3>

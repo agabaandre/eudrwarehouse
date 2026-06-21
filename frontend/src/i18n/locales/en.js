@@ -9,6 +9,7 @@ export default {
     maps: 'Maps',
     management: 'Management',
     language: 'Language',
+    aiAssistant: 'AI Assistant',
   },
   maps: {
     title: 'EUDR Geospatial Map Gallery',

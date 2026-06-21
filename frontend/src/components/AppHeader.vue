@@ -2,6 +2,7 @@
 import { ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { SUPPORTED_LOCALES, setLocale } from '@/i18n';
+import { useAssistantModal } from '@/composables/useAssistantModal';
 import GovBrandMark from '@/components/GovBrandMark.vue';
 
 defineProps({
@@ -12,6 +13,7 @@ defineProps({
 
 const { t, locale } = useI18n();
 const menuOpen = ref(false);
+const { open: openAssistant } = useAssistantModal();
 
 const links = [
   { to: '/', labelKey: 'common.home' },
@@ -26,6 +28,11 @@ function onLocaleChange(e) {
 
 function closeMenu() {
   menuOpen.value = false;
+}
+
+function openAssistantModal() {
+  openAssistant();
+  closeMenu();
 }
 </script>
 
@@ -60,6 +67,9 @@ function closeMenu() {
         <router-link v-for="link in links" :key="link.to" :to="link.to" @click="closeMenu">
           {{ t(link.labelKey) }}
         </router-link>
+        <button type="button" class="nav-ai-btn" @click="openAssistantModal">
+          {{ t('common.aiAssistant') }}
+        </button>
         <select class="lang-select" :value="locale" :aria-label="t('common.language')" @change="onLocaleChange">
           <option v-for="loc in SUPPORTED_LOCALES" :key="loc.code" :value="loc.code">{{ loc.label }}</option>
         </select>
@@ -91,5 +101,26 @@ nav :deep(a.router-link-active) {
   color: var(--ug-yellow, #fcdc04);
   font-weight: 600;
   text-decoration: none;
+}
+
+.nav-ai-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.45rem 0.85rem;
+  border: 1px solid rgba(252, 220, 4, 0.45);
+  border-radius: 999px;
+  background: rgba(252, 220, 4, 0.12);
+  color: var(--ug-yellow, #fcdc04);
+  font-family: var(--font);
+  font-size: 0.875rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background var(--transition), border-color var(--transition);
+}
+
+.nav-ai-btn:hover {
+  background: rgba(252, 220, 4, 0.22);
+  border-color: var(--ug-yellow, #fcdc04);
 }
 </style>

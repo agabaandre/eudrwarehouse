@@ -2,6 +2,10 @@
 import { nextTick, onMounted, ref } from 'vue';
 import { api, apiAuth } from '@/composables/api';
 
+defineProps({
+  modal: { type: Boolean, default: false },
+});
+
 const enabled = ref(true);
 const models = ref([]);
 const selectedModel = ref('platform-guide');
@@ -131,11 +135,15 @@ onMounted(loadConfig);
 </script>
 
 <template>
-  <section class="assistant-section" aria-labelledby="assistant-title">
+  <section
+    class="assistant-section"
+    :class="{ 'assistant-section--modal': modal }"
+    aria-labelledby="assistant-title"
+  >
     <div class="assistant-header">
       <div>
         <div class="assistant-badge">AI</div>
-        <h2 id="assistant-title">EUDR Compliance Assistant</h2>
+        <h2 :id="modal ? 'assistant-modal-title' : 'assistant-title'">EUDR Compliance Assistant</h2>
         <p class="assistant-subtitle">
           Instant answers on EU deforestation rules, registration, mapping, and export due diligence.
         </p>
@@ -225,6 +233,11 @@ onMounted(loadConfig);
   box-shadow: var(--shadow);
   position: relative;
   overflow: hidden;
+}
+
+.assistant-section--modal {
+  margin: 0;
+  max-height: none;
 }
 
 .assistant-section::before {
@@ -318,6 +331,14 @@ onMounted(loadConfig);
   border-radius: var(--radius);
   border: 1px solid var(--border-light);
   margin-bottom: 1rem;
+}
+
+.assistant-section--modal .assistant-chat {
+  max-height: min(42vh, 420px);
+}
+
+.assistant-section--modal .assistant-header {
+  padding-right: 2.5rem;
 }
 
 .assistant-msg {
